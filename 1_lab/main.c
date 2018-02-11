@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <limits.h>
 
+#define n 4
+
 void swap(float *arr, int orig, int dest, int k)
 {
 	float tmp;
@@ -13,15 +15,16 @@ void swap(float *arr, int orig, int dest, int k)
 
 int main()
 {	
-	float a[][4] = {
-		{0, -1, 1, -1},
-		{2, 0, 2, 3},
-		{3, -1, 1, 3}
+	float a[][n + 1] = {
+		{1, 2,  3,  8, 4},
+		{2, 6,  7,  8, 8},
+		{3, 15, 11, 8, 12},
+		{5, 11, 6, 100, 12}
 	};
 
 	printf("\nOrigin:");
 
-	int n = 3;
+	//int n = 3;
 
 	for (int i = 0; i < n - 1; i++) {
 		printf("\n");
@@ -47,8 +50,8 @@ int main()
 				}
 				swap(a, i, max_i, n + 1);
 				printf("\nSWAP:\n");
-				for (int i = 0; i < 3; i++) {
-					for (int j = 0; j < 4; j++) {
+				for (int i = 0; i < n; i++) {
+					for (int j = 0; j < n + 1; j++) {
 						printf("%.2f ", a[i][j]);
 					}
 					printf("\n");
@@ -66,8 +69,8 @@ int main()
 	}
 
 	printf("\n");
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 4; j++) {
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n + 1; j++) {
 			printf("%.2f ", a[i][j]);
 		}
 		printf("\n");
@@ -77,7 +80,7 @@ int main()
 	// float y = - (z * a[1][2] - a[1][3]) / a[1][1];
 	// float x = - ((z * a[0][2])  + (y * a[0][1]) - a[0][3]) / a[0][0];
 
-	float arr[3] = { 0 };
+	float arr[n] = { 0 };
 
 	int count = n - 1;
 
