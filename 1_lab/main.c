@@ -19,19 +19,13 @@ int main()
 		{3, -1, 1, 3}
 	};
 
-	printf("\nOrigin:\n");
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 4; j++) {
-			printf("%.2f ", a[i][j]);
-		}
-		printf("\n");
-	}
+	printf("\nOrigin:");
 
 	int n = 3;
 
 	for (int i = 0; i < n - 1; i++) {
 		printf("\n");
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < 4; j++) {
 				printf("%.2f ", a[i][j]);
 			}
@@ -40,11 +34,18 @@ int main()
 
 		for (int j = i + 1; j < n; j++) {
 			if (a[i][i] == 0) {
-				int tmp = i;
-				while (a[tmp][i] == 0) {
-					tmp++;
+				int max = INT_MIN;
+				int max_i = 0;
+				// while (a[tmp][i] == 0) {
+				// 	tmp++;
+				// }
+				for (int tmp = i; tmp < n; tmp++) {
+					if (a[tmp][i] > max) {
+						max = a[tmp][i];
+						max_i = tmp;
+					}
 				}
-				swap(a, i, tmp, 4);
+				swap(a, i, max_i, n + 1);
 				printf("\nSWAP:\n");
 				for (int i = 0; i < 3; i++) {
 					for (int j = 0; j < 4; j++) {
@@ -53,18 +54,6 @@ int main()
 					printf("\n");
 				}
 			}
-			// float max = INT_MIN;
-			// int k;
-			// for (int g = i; g < n - 1; g++) {
-			// 	if (a[g][i] > max) {
-			// 		max = a[g][i];
-			// 		k = g;
-			// 	}
-			// }
-			// if (i + 1 > k) {
-			// 	printf("SWAP\n");
-			// 	swap(a, i, k, n + 1);
-			// }
 
 			float mult = - (a[j][i] / a[i][i]);
 			// printf("%.2f * %.2f\n", a[j][i], a[i][i]);
