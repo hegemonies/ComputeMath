@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <limits.h>
+#include <math.h>
 
 #define n 4
 
@@ -36,26 +37,26 @@ int main()
 		}
 
 		for (int j = i + 1; j < n; j++) {
-			if (a[i][i] == 0) {
+			if (a[i][i] == 0 || 1) {
 				int max = INT_MIN;
 				int max_i = 0;
 				// while (a[tmp][i] == 0) {
 				// 	tmp++;
 				// }
 				for (int tmp = i; tmp < n; tmp++) {
-					if (a[tmp][i] > max) {
-						max = a[tmp][i];
+					if (fabs(a[tmp][i]) > max) {
+						max = fabs(a[tmp][i]);
 						max_i = tmp;
 					}
 				}
 				swap(a, i, max_i, n + 1);
-				printf("\nSWAP:\n");
-				for (int i = 0; i < n; i++) {
-					for (int j = 0; j < n + 1; j++) {
-						printf("%.2f ", a[i][j]);
-					}
-					printf("\n");
-				}
+				//printf("\nSWAP:\n");
+				// for (int i = 0; i < n; i++) {
+				// 	for (int j = 0; j < n + 1; j++) {
+				// 		printf("%.2f ", a[i][j]);
+				// 	}
+				// 	printf("\n");
+				// }
 			}
 
 			float mult = - (a[j][i] / a[i][i]);

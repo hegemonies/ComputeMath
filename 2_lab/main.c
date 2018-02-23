@@ -1,11 +1,14 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
+#include <sys/time.h>
 
 #define num 3
 #define E 0.001
 
-double *matrxMultVect(double *m, double *v, int n)
+double *matrxMultVect(double **m, double *v, int n)
 {
 	if (!m || !v) {
 		return NULL;
@@ -19,7 +22,7 @@ double *matrxMultVect(double *m, double *v, int n)
 
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
-			tmp_vector[i] += m[i * n + j] * v[j];
+			tmp_vector[i] += m[i][j] * v[j];
 		}
 	}
 
@@ -41,7 +44,7 @@ double *vectSublVect(double *v1, double *v2, int n)
 	return tmp_vector;
 }
 
-double getMaxFromMatrix(double *m, int n)
+double getMaxFromMatrix(double **m, int n)
 {
 	if (!m) {
 		return -1;
@@ -54,7 +57,7 @@ double getMaxFromMatrix(double *m, int n)
 		sum = 0;
 
 		for (int j = 0; j < n; j++) {
-			sum += fabs(m[i * n + j]);
+			sum += fabs(m[i][j]);
 		}
 
 		if (sum > max) {
@@ -82,46 +85,55 @@ double getMaxFromVector(double *v, int n)
 	return max;
 }
 
-int getN(double maxC, double maxB, double e)
+double getN(double maxC, double maxB, double e)
 {
-	return ( (log((e * (1 - maxC)) / maxB)) / (log(maxC)) ) + 1;
+	return (( (log((e * (1 - maxC)) / maxB)) / (log(maxC)) ) + 1);
 }
 
-int getNumberIteration(double *m, double *v, int n, double e)
+int getNumberIteration(double **m, double *v, int n, double e)
 {
 	if (!m || !v) {
 		return -1;
 	}
 
 	double maxC = getMaxFromMatrix(m, n);
+
+	if (maxC >= 1) {
+		printf("Не сходится\n");
+		exit(1);
+	}
+
 	double maxB = getMaxFromVector(v, n);
 
 	return getN(maxC, maxB, e);
 }
 
-void redMatxToConvForm(double *m, double *v, int n)
+void redMatxToConvForm(double **m, double *v, int n)
 {
 	if (!m || !v) {
 		return;
 	}
 
 	for (int i = 0; i < n; i++) {
-		double div = m[i * n + i];
+		double div = m[i][i];
+		if (div == 0) {
+			continue;
+		}
 		for (int j = 0; j < n; j++) {
-			m[i * n + j] /= div;
+			m[i][j] /= div;
 		}
 		v[i] /= div;
 	}
 }
 
-void zeroMainDiagonal(double *m, int n)
+void zeroMainDiagonal(double **m, int n)
 {
 	if (!m) {
 		return;
 	}
 
 	for (int i = 0; i < n; i++) {
-		m[i * n + i] = 0;
+		m[i][i] = 0;
 	}
 }
 
@@ -151,7 +163,7 @@ void swapVectors(double *v1, double *v2, int n)
 	}
 }
 
-double *methodSimpleIteration(double *A, double *B, int n)
+double *methodSimpleIteration(double **A, double *B, int n)
 {
 	redMatxToConvForm(A, B, num); // привидение матрица к удобному виду
 
@@ -178,13 +190,15 @@ double *methodSimpleIteration(double *A, double *B, int n)
 	return X[0];
 }
 
-double *methodSeidels(double *A, double *B, int n)
+double *methodSeidels(double **A, double *B, int n)
 {
 	redMatxToConvForm(A, B, num); // привидение матрица к удобному виду
 
 	zeroMainDiagonal(A, num); // зануление элементов главной диагонали
 
 	int N = getNumberIteration(A, B, num, E); // подсчет кол-ва итераций
+
+	printf("%d\n", N);
 
 	double **X = calloc(N, sizeof(double)); // k
 	for (int i = 0; i < N; i++) {
@@ -196,10 +210,10 @@ double *methodSeidels(double *A, double *B, int n)
 	for (int k = 0; k < N - 1; k++) {
 		for (int i = 0; i < n; i++) {
 			for (int j1 = 0; j1 < i; j1++) {
-				Cx += X[k + 1][j1] * A[i * n + j1];
+				Cx += X[k + 1][j1] * A[i][j1];
 			}
 			for (int j = i; j < n; j++) {
-				Cx += X[k][j] * A[i * n + j];
+				Cx += X[k][j] * A[i][j];
 			}
 
 			X[k + 1][i] = B[i] - Cx;
@@ -209,38 +223,140 @@ double *methodSeidels(double *A, double *B, int n)
 
 	return X[N - 1];
 }
-
-int main()
+/*--------------------------------------------------------*/
+double wtime()
 {
-	double A[][num] = {
-		{5, -1, -1},
-		{-1, -3, 0}, 
-		{1, 1, 4}
-	};
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    return (double)t.tv_sec + (double)t.tv_usec * 1E-6;
+}
 
-	double B[num] = {
-		3,
-		-7,
-		3
-	};
+int getSheetFromFile(char *file_name, double **m, double *v, int *h, int *w)
+{
+	FILE *in = fopen(file_name, "r");
 
-	// double *x = methodSimpleIteration(A, B, num);
-	
+	if (!in) {
+		return -1;
+	}
 
-	// for (int i = 0; i < num; i++) {
-	// 	printf("%0.3f ", x[i]);
-	// }
+	char *str = NULL;
+	size_t len = 0;
+	*h = 0;
+	*w = 0;
+	int count;
 
-	// printf("\n");
+	while (getline(&str, &len, in) != -1) {
+		count = 0;
+		for (int i = 0; str[i] != 0; i++) {
+			if (str[i] == ' ') {
+				count++;
+			}
+		}
+		count++;
+		if (count > *w) {
+			*w = count;
+		}
+		(*h)++;
+	}
 
-	double *x1 = methodSeidels(A, B, num);
-	
+	fseek(in, 0, SEEK_SET);
 
-	for (int i = 0; i < num; i++) {
-		printf("%0.3f ", x1[i]);
+	m = realloc(m, *h);
+	v = realloc(v, *h);
+
+	for (int i = 0; i < *h; i++) {
+		m[i] = calloc(*w, sizeof(double));
+		for (int j = 0; j < *w - 1; j++) {
+			fscanf(in, "%lf", &m[i][j]);
+		}
+		fscanf(in, "%lf", &v[i]);
+	}
+
+	fclose(in);
+
+	return 0;
+}
+
+
+void printMatx(double **m, int n)
+{
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			printf("%.3f ", m[i][j]);
+		}
+		printf("\n");
+	}
+}
+
+void printVector(double *v, int n)
+{
+	for (int i = 0; i < n; i++) {
+		printf("%.3f ", v[i]);
 	}
 
 	printf("\n");
+}
+/*----------------------------------------------------------*/
+
+int main()
+{
+	// double A[][num] = {
+	// 	{5, -1, -1},
+	// 	{-1, -3, 0}, 
+	// 	{1, 1, 4}
+	// };
+
+	// double B[num] = {
+	// 	3,
+	// 	-7,
+	// 	3
+	// };
+
+	double **A = malloc(0);
+	double *B = malloc(0);
+	int height = 0;
+	int width = 0;
+	getSheetFromFile("in.txt", A, B, &height, &width);
+
+	printMatx(A, num);
+	printVector(B, num);
+
+	// srand(time(0));
+
+	// double **A = calloc(num, sizeof(double));
+	// for (int i = 0; i < num; i++) {
+	// 	A[i] = calloc(num, sizeof(double));
+	// 	for (int j = 0; j < num; j++) {
+	// 		A[i][j] = rand() % 10;
+	// 		printf("%.2f ", A[i][j]);
+	// 	}
+	// 	printf("\n");
+	// }
+
+	// double *B = calloc(num, sizeof(double));
+
+	// for (int i = 0; i < num; i++) {
+	// 	B[i] = rand() % 100;
+	// 	printf("%.2f ", B[i]);
+	// }
+	// printf("\n");
+
+
+	// double t = wtime();
+	// double *x = methodSimpleIteration(A, B, num); // простые итерации
+	// t = wtime() - t;
+
+	// printf("Time = %.5f\n", t);
+
+	// printVector(x, num);
+
+	double t = wtime();
+	double *x = methodSeidels(A, B, num); // метод зейделя
+	t = wtime() - t;
+
+	printf("Time = %.5f\n", t);
+
+	printVector(x, num);
 
 	return 0;
 }
