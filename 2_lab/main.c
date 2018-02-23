@@ -8,13 +8,13 @@
 double *matrxMultVect(double *m, double *v, int n)
 {
 	if (!m || !v) {
-		return -1;
+		return NULL;
 	}
 
 	double *tmp_vector = calloc(n, sizeof(double));
 
 	if (!tmp_vector) {
-		return -1;
+		return NULL;
 	}
 
 	for (int i = 0; i < n; i++) {
@@ -29,7 +29,7 @@ double *matrxMultVect(double *m, double *v, int n)
 double *vectSublVect(double *v1, double *v2, int n)
 {
 	if (!v1 || !v2) {
-		return -1;
+		return NULL;
 	}
 
 	double *tmp_vector = calloc(n, sizeof(double));
@@ -159,6 +159,8 @@ double *methodSimpleIteration(double *A, double *B, int n)
 
 	int N = getNumberIteration(A, B, num, E); // подсчет кол-ва итераций
 
+	printf("%d\n", N);
+
 	double **X = calloc(2, sizeof(double));
 	for (int i = 0; i < 2; i++) {
 		X[i] = calloc(num, sizeof(double));
@@ -176,6 +178,38 @@ double *methodSimpleIteration(double *A, double *B, int n)
 	return X[0];
 }
 
+double *methodSeidels(double *A, double *B, int n)
+{
+	redMatxToConvForm(A, B, num); // привидение матрица к удобному виду
+
+	zeroMainDiagonal(A, num); // зануление элементов главной диагонали
+
+	int N = getNumberIteration(A, B, num, E); // подсчет кол-ва итераций
+
+	double **X = calloc(N, sizeof(double)); // k
+	for (int i = 0; i < N; i++) {
+		X[i] = calloc(num, sizeof(double));
+	}
+
+	double Cx;
+
+	for (int k = 0; k < N - 1; k++) {
+		for (int i = 0; i < n; i++) {
+			for (int j1 = 0; j1 < i; j1++) {
+				Cx += X[k + 1][j1] * A[i * n + j1];
+			}
+			for (int j = i; j < n; j++) {
+				Cx += X[k][j] * A[i * n + j];
+			}
+
+			X[k + 1][i] = B[i] - Cx;
+			Cx = 0;
+		}
+	}
+
+	return X[N - 1];
+}
+
 int main()
 {
 	double A[][num] = {
@@ -190,11 +224,20 @@ int main()
 		3
 	};
 
-	double *x = methodSimpleIteration(A, B, num);
+	// double *x = methodSimpleIteration(A, B, num);
+	
+
+	// for (int i = 0; i < num; i++) {
+	// 	printf("%0.3f ", x[i]);
+	// }
+
+	// printf("\n");
+
+	double *x1 = methodSeidels(A, B, num);
 	
 
 	for (int i = 0; i < num; i++) {
-		printf("%0.3f ", x[i]);
+		printf("%0.3f ", x1[i]);
 	}
 
 	printf("\n");
