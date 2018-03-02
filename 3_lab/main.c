@@ -18,12 +18,10 @@ double hdm(double a, double b)
 	if (df(a) * df(b) > 0) {
 		return -1;
 	}
+
 	double c = fabs(b - a) / 2;
 
 	while (f(c) > eps) {
-		printf("a = %.4lf\n", a);
-		printf("b = %.4lf\n", b);
-		printf("c = %.4lf\n\n", c);
 
 		if (f(a) * f(c) < 0) {
 			b = c;
@@ -38,6 +36,10 @@ double hdm(double a, double b)
 
 double mc(double a, double b)
 {
+	if (df(a) * df(b) > 0) {
+		return -1;
+	}
+
 	double next = 0;
 	double tmp = b;
 
@@ -45,12 +47,22 @@ double mc(double a, double b)
 		tmp = next;
 		next = a - (df(a) / (df(a) - df(tmp))) * (a - tmp);
 		b = tmp;
-		printf("next = %.3lf\n", next);
-		printf("a = %.3lf\n", a);
-		printf("b = %.3lf\n\n", b);
 	}
 
 	return next;
+}
+
+double mn(double a, double b)
+{
+	double h = 0;
+	double x = 1;
+
+	do {
+		h = f(x) / df(x);
+		x = x - h;
+	} while (fabs(h) > eps);
+
+	return x;
 }
 
 int main()
@@ -58,14 +70,19 @@ int main()
 	double a = -1; // начало заданного отрезка
 	double b = 3; // конец
 
-	printf("f(a) * f(b) = %.3lf\n", df(a) * df(b));
+	printf("f(a) * f(b) = %.3lf\n\n", df(a) * df(b));
 
 	double c = hdm(a, b);
 
 	printf("x = %.4lf\n", c);
-	printf("f(x) = %.4lf\n", f(c));
+	printf("f(x) = %.4lf\n\n", f(c));
 
 	c = mc(a, b);
+
+	printf("x = %.4lf\n", c);
+	printf("f(x) = %.4lf\n\n", f(c));
+
+	c = mn(a, b);
 
 	printf("x = %.4lf\n", c);
 	printf("f(x) = %.4lf\n", f(c));
