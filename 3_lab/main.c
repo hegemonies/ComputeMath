@@ -15,6 +15,9 @@ double df(double x) // y' = 8x + 4
 
 double hdm(double a, double b)
 {
+	if (df(a) * df(b) > 0) {
+		return -1;
+	}
 	double c = fabs(b - a) / 2;
 
 	while (f(c) > eps) {
@@ -40,9 +43,7 @@ double mc(double a, double b)
 
 	while (fabs(next - b) > eps) {
 		tmp = next;
-		// next = b - f(b) * (a - b) / (f(a) - f(b));
-		next = a - (f(a) / (f(a) - f(tmp))) * (a - tmp);
-		// a = b;
+		next = a - (df(a) / (df(a) - df(tmp))) * (a - tmp);
 		b = tmp;
 		printf("next = %.3lf\n", next);
 		printf("a = %.3lf\n", a);
