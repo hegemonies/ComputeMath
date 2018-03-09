@@ -1,34 +1,31 @@
 #include <stdio.h>
 #include <math.h>
 
-#define eps 0.1
+#define eps 0.001
 
 double f(double x) // y = 4x^2 - 4x + 1
 {
-	return (4*x*x) - (4*x) + 1;
+	return x*x - 3;
 }
 
 double df(double x) // y' = 8x + 4
 {
-	return 8*x - 4;
+	return 2*x;
 }
 
 double hdm(double a, double b)
 {
-	if (df(a) * df(b) > 0) {
-		return -1;
-	}
+	double c = (a + b) / 2;
 
-	double c = fabs(b - a) / 2;
-
-	while (f(c) > eps) {
-
+	while (fabs((b - a) / 2) > eps) {
 		if (f(a) * f(c) < 0) {
 			b = c;
 		} else {
 			a = c;
 		}
-		c = fabs(b - a) / 2;
+
+		c = (a + b) / 2;
+		printf("che1\n");
 	}
 
 	return c;
@@ -36,20 +33,22 @@ double hdm(double a, double b)
 
 double mc(double a, double b)
 {
-	if (df(a) * df(b) > 0) {
-		return -1;
+	double tmp = 99999;
+	double c = (a*f(b) - b*f(a)) / (f(b) - f(a));
+
+	while (fabs(tmp - c) > eps) {
+		if (f(a) * f(c) < 0) {
+			b = c;
+		} else {
+			a = c;
+		}
+
+		tmp = c;
+		c = (a*f(b) - b*f(a)) / (f(b) - f(a));
+		printf("che2\n");
 	}
 
-	double next = 0;
-	double tmp = b;
-
-	while (fabs(next - b) > eps) {
-		tmp = next;
-		next = a - (df(a) / (df(a) - df(tmp))) * (a - tmp);
-		b = tmp;
-	}
-
-	return next;
+	return c;
 }
 
 double mn(double a, double b)
@@ -60,6 +59,7 @@ double mn(double a, double b)
 	do {
 		h = f(x) / df(x);
 		x = x - h;
+		printf("che3\n");
 	} while (fabs(h) > eps);
 
 	return x;
