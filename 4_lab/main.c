@@ -4,7 +4,7 @@
 #include <limits.h>
 #include <string.h>
 
-#define Eps 0.01
+#define Eps 0.00001
 
 typedef double (*F)(double, double, double);
 typedef double (*W)(double, double, double);
@@ -31,12 +31,18 @@ double df1(double x, double y, double z)
 
 double df2(double x, double y, double z)
 {
-	return 4*x + 2*y - 4;
+	if (z != 0) {
+		return -4;
+	}
+	return 4*x + 2*y;
 }
 
 double df3(double x, double y, double z)
 {
-	return 6*x - 4 + 2*z;
+	if (y != 0) {
+		return -4;
+	}
+	return 6*x + 2*z;
 }
 
 double *compF(F *f, double *vect, double *b, int n)
@@ -52,17 +58,17 @@ double *compF(F *f, double *vect, double *b, int n)
 
 double **compW(W *f, double *vect, int n)
 {
-	double **tmp = calloc(n, sizeof(double));
+	double **tmp = calloc(n, sizeof(double*));
 
 	int check = 1;
 
 	for (int i = 0; i < n; i++) {
-		tmp = calloc(n, sizeof(double));
+		tmp[i] = calloc(n, sizeof(double));
 		for (int j = 0; j < n; j++) {
-			tmp[i][j] = f[i](1 ? check == 1 : 0, 1 ? check == 2 : 0, 1 ? check == 3 : 0);
+			tmp[i][j] = f[i]((check == 1) ? vect[0] : 0, (check == 2) ? vect[1] : 0, (check == 3) ? vect[2] : 0);
 			check++;
 		}
-		check = 0;
+		check = 1;
 	}
 
 	return tmp;
@@ -99,7 +105,7 @@ void printMatx(double **m, int n)
 {
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
-			printf("%.2f ", m[i][j]);
+			printf("%.3f ", m[i][j]);
 		}
 		printf("\n");
 	}
@@ -157,9 +163,7 @@ double **reversMatx(double **matx, int n)
 		}
 	}
 
-	printMatx(mRev, n);
-
-	return NULL;
+	return mRev;
 }
 
 double **multipMatxOnMatx(double **a, double **b, int n)
@@ -222,8 +226,6 @@ int main()
 	f[1] = f2;
 	f[2] = f3;
 
-	// printf("%f\n", f[0](1, 1, 1));
-
 	double B[3] = { 1, 0, 0 };
 
 	double X0[3] = { 0.5, 0.5, 0.5 };
@@ -234,38 +236,43 @@ int main()
 	w[1] = df2;
 	w[2] = df3;
 
-	double *tmp = 0;
+	double *tmp = calloc(n, sizeof(double));
+	double *prev = calloc(n, sizeof(double));
 	double *x = calloc(n, sizeof(double));
 
 	double *y = calloc(n, sizeof(double));
-	// double **y = calloc(n, sizeof(double));
-	// for (int i = 0; i < n; i++) {
-	// 	y[i] = calloc(n, sizeof(double));
-	// }
 
 	double **tmp_yakobi;
-	// double **tmp_yakobi = calloc(n, sizeof(double));
-	// for (int i = 0; i < n; i++) {
-	// 	tmp_yakobi[i] = calloc(n, sizeof(double));
-	// }
 
-	// double *fxk = calloc(n, sizeof(double));
 	double *fxk;
 
-	int count = 0;
+	// int count = 0;
+
+	double max = INT_MIN;
+	x = X0;
 
 	do {
-		tmp = x;
-		if (count == 0) {
-			x = X0;
-		}
 		tmp_yakobi = compW(w, x, n);
 		fxk = compF(f, x, B, n);
 		y = matrxMultVect(reversMatx(tmp_yakobi, n), fxk, n);
+
+		tmp = vectorMinusVector(x, prev, n);
+
+		for (int i = 0; i < n; i++) {
+			if (tmp[i] >= max) {
+				printf("tmp[%d] = %.3f\n", i, tmp[i]);
+				printf("max = %.3f\n", max);
+				max = fabs(tmp[i]);
+			}
+		}
+
 		x = vectorMinusVector(x, y, n);
-		count++;
-		printf("%d\n", count);
-	} while (fabs(x - tmp) > Eps);
+		// printf("che = %d\n", max);
+	} while (fabs(max) > Eps);
+
+	printf("%.3f\n", x[0]);
+	printf("%.3f\n", x[1]);
+	printf("%.3f\n", x[2]);
 
 
 	// double **tst = calloc(n, sizeof(double));
