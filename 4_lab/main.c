@@ -210,7 +210,7 @@ double *vectorMinusVector(double *l, double *r, int n)
 	double *res = calloc(n, sizeof(double));
 
 	for (int i = 0; i < n; i++) {
-		res[i] -= l[i] - r[i];
+		res[i] = l[i] - r[i];
 	}
 
 	return res;
@@ -249,26 +249,25 @@ int main()
 
 	double **reversM;
 
-	int count = 0;
-
-	double max = INT_MIN;
+	double max;
 	x = X0;
 
 	do {
+		max = INT_MIN;
 		tmp_yakobi = compW(w, x, n);
-		printf("tmp_yakobi:\n");
-		printMatx(tmp_yakobi, n);
+		// printf("tmp_yakobi:\n");
+		// printMatx(tmp_yakobi, n);
 		fxk = compF(f, x, B, n);
-		printf("fxk[0] = %.3f\n", fxk[0]);
-		printf("fxk[1] = %.3f\n", fxk[1]);
-		printf("fxk[2] = %.3f\n", fxk[2]);
+		// printf("fxk[0] = %.3f\n", fxk[0]);
+		// printf("fxk[1] = %.3f\n", fxk[1]);
+		// printf("fxk[2] = %.3f\n", fxk[2]);
 		reversM = reversMatx(tmp_yakobi, n);
-		printf("reversM:\n");
-		printMatx(reversM, n);
+		// printf("reversM:\n");
+		// printMatx(reversM, n);
 		y = matrxMultVect(reversM, fxk, n);
-		printf("y[0] = %.3f\n", y[0]);
-		printf("y[1] = %.3f\n", y[1]);
-		printf("y[2] = %.3f\n", y[2]);
+		// printf("y[0] = %.3f\n", y[0]);
+		// printf("y[1] = %.3f\n", y[1]);
+		// printf("y[2] = %.3f\n", y[2]);
 
 		prev = x;
 	
@@ -277,25 +276,22 @@ int main()
 		tmp = vectorMinusVector(x, prev, n);
 
 		for (int i = 0; i < n; i++) {
-			if (fabs(tmp[i]) >= max) {
-				// printf("tmp[%d] = %.3f\n", i, tmp[i]);
-				// printf("max = %.3f\n", max);
+			if (fabs(tmp[i]) > max) {
 				max = fabs(tmp[i]);
 			}
 		}
 
 		// printf("max = %.3f\n", max);
-		printf("%.3f\n", x[0]);
-		printf("%.3f\n", x[1]);
-		printf("%.3f\n", x[2]);
-		printf("\n");
+		// printf("%.3f\n", x[0]);
+		// printf("%.3f\n", x[1]);
+		// printf("%.3f\n", x[2]);
+		// printf("\n");
 
-		count++;
-	} while (count < 5);
+	} while (max > Eps);
 
-	printf("%.3f\n", x[0]);
-	printf("%.3f\n", x[1]);
-	printf("%.3f\n", x[2]);
+	printf("x[0] = %.3f\n", x[0]);
+	printf("x[1] = %.3f\n", x[1]);
+	printf("x[2] = %.3f\n", x[2]);
 
 
 	// double **tst = calloc(n, sizeof(double));
