@@ -238,6 +238,7 @@ int main()
 
 	double *tmp = calloc(n, sizeof(double));
 	double *prev = calloc(n, sizeof(double));
+
 	double *x = calloc(n, sizeof(double));
 
 	double *y = calloc(n, sizeof(double));
@@ -256,19 +257,21 @@ int main()
 		fxk = compF(f, x, B, n);
 		y = matrxMultVect(reversMatx(tmp_yakobi, n), fxk, n);
 
+		prev = x;
+	
+		x = vectorMinusVector(x, y, n);
+
 		tmp = vectorMinusVector(x, prev, n);
 
 		for (int i = 0; i < n; i++) {
-			if (tmp[i] >= max) {
-				printf("tmp[%d] = %.3f\n", i, tmp[i]);
-				printf("max = %.3f\n", max);
+			if (fabs(tmp[i]) >= max) {
+				// printf("tmp[%d] = %.3f\n", i, tmp[i]);
+				// printf("max = %.3f\n", max);
 				max = fabs(tmp[i]);
 			}
 		}
-
-		x = vectorMinusVector(x, y, n);
-		// printf("che = %d\n", max);
-	} while (fabs(max) > Eps);
+		printf("max = %.3f\n", max);
+	} while (max > Eps);
 
 	printf("%.3f\n", x[0]);
 	printf("%.3f\n", x[1]);
