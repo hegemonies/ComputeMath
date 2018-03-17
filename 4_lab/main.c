@@ -16,7 +16,7 @@ double f1(double x, double y, double z)
 
 double f2(double x, double y, double z)
 {
-	return 2*(x * x) + (y * y) + 4*z;
+	return 2*(x * x) + (y * y) - 4*z;
 }
 
 double f3(double x, double y, double z)
@@ -247,15 +247,28 @@ int main()
 
 	double *fxk;
 
-	// int count = 0;
+	double **reversM;
+
+	int count = 0;
 
 	double max = INT_MIN;
 	x = X0;
 
 	do {
 		tmp_yakobi = compW(w, x, n);
+		printf("tmp_yakobi:\n");
+		printMatx(tmp_yakobi, n);
 		fxk = compF(f, x, B, n);
-		y = matrxMultVect(reversMatx(tmp_yakobi, n), fxk, n);
+		printf("fxk[0] = %.3f\n", fxk[0]);
+		printf("fxk[1] = %.3f\n", fxk[1]);
+		printf("fxk[2] = %.3f\n", fxk[2]);
+		reversM = reversMatx(tmp_yakobi, n);
+		printf("reversM:\n");
+		printMatx(reversM, n);
+		y = matrxMultVect(reversM, fxk, n);
+		printf("y[0] = %.3f\n", y[0]);
+		printf("y[1] = %.3f\n", y[1]);
+		printf("y[2] = %.3f\n", y[2]);
 
 		prev = x;
 	
@@ -270,8 +283,15 @@ int main()
 				max = fabs(tmp[i]);
 			}
 		}
-		printf("max = %.3f\n", max);
-	} while (max > Eps);
+
+		// printf("max = %.3f\n", max);
+		printf("%.3f\n", x[0]);
+		printf("%.3f\n", x[1]);
+		printf("%.3f\n", x[2]);
+		printf("\n");
+
+		count++;
+	} while (count < 5);
 
 	printf("%.3f\n", x[0]);
 	printf("%.3f\n", x[1]);
