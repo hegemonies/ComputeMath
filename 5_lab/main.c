@@ -4,7 +4,7 @@
 
 double P(double x_find, double *x, double *y, int n)
 {
-	if (!x) {
+	if (!x || !y) {
 		return -1;
 	}
 
