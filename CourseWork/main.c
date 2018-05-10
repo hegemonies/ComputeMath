@@ -7,6 +7,9 @@ double outD1 = 0.0;
 
 double diff(double x, double y, double D1, double D2)
 {
+	if (x == 0) {
+		x = 0.00001;
+	}
 	return pow(D2, 5) - cos(x) * D2 - sin(x) - 5 * log(x) * D1 - y * (x + 3);
 }
 
@@ -104,7 +107,7 @@ int main()
 	FILE *out = fopen("Runge_Kutt.txt", "w");
 	
 	int j = 0;
-	for (double i = a; i < b; i += h) {
+	for (double i = a; i <= b; i += h) {
 		fprintf(out, "%.1lf %.5lf\n", i, Runge_Kutt(x0, i, h, y0, D1));
 		y[j] = Runge_Kutt(x0, i, h, y0, D1);
 		printf("%.3lf\n", y[j]);
