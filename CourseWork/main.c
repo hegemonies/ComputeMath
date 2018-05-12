@@ -2,62 +2,79 @@
 #include <stdlib.h>
 #include <math.h>
 
-double eps = 1e-5;
+double eps = 1e-6;
 
 double outD1 = 0.0;
 
 double diff(double x, double y, double D1, double D2)
 {
 	if (x == 0) {
-		x = 0.00001;
+		x = 0.0000000000000000000000001;
 	}
 	return pow(D2, 5) - cos(x) * D2 - sin(x) - 5 * log(x) * D1 - y * (x + 3);
 }
 
-double f(double x, double y, double D1)
+double *addition_of_vectors(double *v1, double *v2, int n)
+{
+	double *v3 = malloc(sizeof(double) * n);
+
+	for (int i = 0; i < n; i++) {
+		v3[i] = v1[i] + v2[i];
+	}
+
+	return v3;
+}
+
+double *multiple_dig_by_vector(double a, double *v, int n)
+{
+	double *v2 = malloc(sizeof(double) * n);
+
+	for (int i = 0; i < n; i++) {
+		v2[i] = a * v[i];
+	}
+
+	return v2;
+}
+
+double *f(double x, double *y)
 {
 	double a = 0, b = 2;
 	double fa = 0, fb = 0;
 
 	do {
-		fa = diff(x, y, D1, a--);
-		fb = diff(x, y, D1, b++);
+		fa = diff(x, y[0], y[1], a--);
+		fb = diff(x, y[0], y[1], b++);
 	} while (fa * fb > 0);
 	
 	double c = 0;
 
 	while(fabs(b - a) > eps) {
 		c = (a + b) / 2;
-		if(diff(x, y, D1, a) * diff(x, y, D1, c) < 0)
+		if(diff(x, y[0], y[1], a) * diff(x, y[0], y[1], c) < 0)
 			b = c;
-		else if (diff(x, y, D1, c) * diff(x, y, D1, b) < 0)
+		else if (diff(x, y[0], y[1], c) * diff(x, y[0], y[1], b) < 0)
 			a = c;
 	}
-	return (a + b) / 2;
+
+	double *tmp_y = malloc(sizeof(double) * 2);
+	tmp_y[0] = y[1];
+	tmp_y[1] = (a + b) / 2;
+	
+	return  tmp_y;
 }
 
-double Runge_Kutt(double a, double b, double h, double y, double D1)
+double *Runge_Kutt(double a, double b, double h, double *y0)
 {
-	double x = a;
-	double y_t = 0.0;
-	double D1_t = 0.0;
-
-	while (x < b) {
-		y_t = y + (h/2) * D1;
-		D1_t = D1 + (h/2) * f(x, y, D1);
-		y += h * D1_t;
-		D1 += h * f(x + h/2, y_t, D1_t);
-		x += h;
+	double *tmp_y;
+	double *y = y0;
+	for (double i = a + h; i <= b; i += h) {
+		tmp_y = addition_of_vectors(y, multiple_dig_by_vector(h, f(i, y), 2), 2);
+		y = addition_of_vectors(y, multiple_dig_by_vector(h / 2, addition_of_vectors(f(i, y), f(i + h, tmp_y), 2), 2), 2);
 	}
-
-	h = b - x;
-	y_t = y + (h/2) * D1;
-	D1_t = D1 + (h/2) * f(b, y, D1);
-	y += h * D1_t;
-	outD1 = D1 + h * f(b + h/2, y_t, D1_t);
 
 	return y;
 }
+
 
 double MethodShooting(double x0, double x1, double y0, double y1, double h)
 {
@@ -66,9 +83,17 @@ double MethodShooting(double x0, double x1, double y0, double y1, double h)
 	double fa = 0.0;
 	double fb = 0.0;
 
+	double tmp[2];
+	double *vt;
+
 	do {
-		fa = Runge_Kutt(x0, x1, h, y0, al) - y1;
-		fb = Runge_Kutt(x0, x1, h, y0, bt) - y1;
+		tmp[0] = y0;
+		tmp[1] = al;
+		vt = Runge_Kutt(x0, x1, h, tmp);
+		fa = vt[0] - y1;
+		tmp[1] = bt;
+		vt = Runge_Kutt(x0, x1, h, tmp);
+		fb = vt[0] - y1;
 		al -= h;
 		bt += h;
 	} while (fa * fb > 0);
@@ -76,75 +101,23 @@ double MethodShooting(double x0, double x1, double y0, double y1, double h)
 	double c = 0.0;
 	while (fabs(bt - al) > eps) {
 		c = (al + bt) / 2;
-		if ((((Runge_Kutt(x0, x1, h, y0, al) - y1) * (Runge_Kutt(x0, x1, h, y0, c) - y1)) < 0)) {
+
+		tmp[1] = al;
+		double *tmp1 = Runge_Kutt(x0, x1, h, tmp);
+		tmp[1] = c;
+		double *tmp2 = Runge_Kutt(x0, x1, h, tmp);
+		tmp[1] = bt;
+		double *tmp4 = Runge_Kutt(x0, x1, h, tmp);
+
+		if ((((tmp1[0] - y1) * (tmp2[0] - y1)) < 0)) {
 			bt = c;
-		} else if ((((Runge_Kutt(x0, x1, h, y0, c) - y1) * (Runge_Kutt(x0, x1, h, y0, bt) - y1)) < 0)) {
+		} else if ((((tmp2[0] - y1) * (tmp4[0] - y1)) < 0)) {
 			al = c;
 		}
 	}
 
 	return (al + bt) / 2;
 }
-
-// double Splines(double x_find, double *x, double *y, int n)
-// {
-// 	double res = 0.0;
-
-// 	int _i = 0;
-// 	for (_i = 0; x_find > x[_i] && _i < n; _i++) { }
-
-// 	double **c = calloc(0.0, sizeof(double*) * (n - 1));
-
-// 	for (int i = 0; i < n - 1; i++) {
-// 		c[i] = calloc(0.0, sizeof(double) * (n - 1));
-// 		for (int j = 0; j < n - 1; j++) {
-// 			if (i == j) {
-// 				c[i][j] = ((x[i] - x[i - 1]) + (x[i + 1] - x[i])) / 3;
-// 				continue;
-// 			}
-// 			if (j == i + 1) {
-// 				c[i][j] = (x[i + 1] - x[i]) / 6;
-// 				continue;
-// 			}
-// 			if (j == i - 1) {
-// 				c[i][j] = (x[i] - x[i - 1]) / 6;
-// 				continue;
-// 			}
-// 			c[i][j] = 0;
-// 		}
-// 	}
-
-// 	double *d = calloc(0.0, sizeof(double) * (n - 1));
-
-// 	for (int i = 1; i < n - 1; i++) {
-// 		d[i] = ((y[i + 1] - y[i]) / (x[i + 1] - x[i])) - ((y[i] - y[i - 1]) / (x[i - 1] - x[i]));
-// 	}
-
-// 	double *M = calloc(0.0, sizeof(double) * (n - 1));
-
-// 	for (int i = 0; i < n - 2; i++) {
-// 		double tmp = 0.0;
-// 		for (int j = ((i == 0) ? i : i - 1); j < ((i == n - 2) ? (i + 2) : (i + 3)); j++) {
-// 			tmp += c[i][j];
-// 		}
-// 		M[i + 1] = d[i] / tmp;
-// 	}
-
-
-// 	res = M[_i - 1] * (pow(x[_i] - x_find, 3) / ((x[_i] - x[_i - 1]) * 6));
-// 	res += M[_i]  * (pow(x_find - x[_i - 1], 3) / (6 * (x[_i] - x[_i - 1])));
-// 	res += (y[_i - 1] - (M[_i - 1] * pow(x[_i] - x[_i - 1], 2)) / 6) * ((x[_i] - x_find) / (x[_i] - x[_i - 1]));
-// 	res += (y[_i] - ((M[_i] * pow(x[_i] - x[_i - 1], 2)) / 6)) * ((x_find - x[_i - 1]) / (x[_i] - x[_i - 1]));
-
-// 	for (int i = 0; i < n - 1; i++)
-// 		free(c[i]);
-// 	free(c);
-// 	free(d);
-// 	free(M);
-
-// 	return res;
-// }
-
 
 void set_h(double *h, double *X, int n)
 {
@@ -246,12 +219,6 @@ void set_M(double *M, double *C, double *d, int n)
 	Matrix_answer(M, arr, (n - 1));
 }
 
-void print_M(double *M, int n)
-{
-	for (int i = 0; i < n; i++)
-		printf("M[%d] = %.3f\n", i, M[i]);
-}
-
 int set_i(double *X, double x, int n)
 {
 	int i = 0;
@@ -300,35 +267,20 @@ double Splines(double *X, double *Y, double x, int n)
 	return s;
 }
 
-double F(double x, double *y)
-{
-	if (x == 0)
-		return y[0];
-	if (x == 0.2)
-		return y[1];
-	if (x == 0.4)
-		return y[2];
-	if (x == 0.6)
-		return y[3];
-	if (x == 0.8)
-		return y[4];
-	if (x == 1.0)
-		return y[5];
-	return 0;
-}
-
 double Form_of_Simpson(double a, double b, double h, double *y)
 {
 	double res = 0.0;
+	int n = (int)((a + b) / h) + 1;
 
-	double j = a;
+	for (int i = 1; i < 2*n - 1; i += 2)
+		res += 4 * y[i];
 
-	for (int i = 1; j <= b - h; i++, j += h) {
-		res += (i % 2 ? 4 : 2) * F(j, y);
-	}
+	for (int i = 2; i < n - 2; i += 2) 
+		res += 2 * y[i];
 
-	res += F(a, y) + F(b, y);
-	res = (res * h) / 3;
+	res += y[0] + y[n];
+	res = res * h / 3;
+
 
 	return res;
 }
@@ -369,14 +321,21 @@ int main()
 	double y1 = 2.0;
 
 	double D1 = MethodShooting(x0, x1, y0, y1, h);
+	printf("D1 = %.3lf\n", D1);
 
 	FILE *out = fopen("Runge_Kutt.txt", "w");
 	
+	double dy[size + 1];
+
 	int j = 0;
+	printf("\ty(x)\ty\'(x)\n");
 	for (double i = a; i <= b; i += h) {
-		fprintf(out, "%.1lf %.5lf\n", i, Runge_Kutt(x0, i, h, y0, D1));
-		y[j] = Runge_Kutt(x0, i, h, y0, D1);
-		printf("%.1lf %.3lf\n", i, y[j]);
+		double tmp[2] = { y0, D1 };
+		double *tv = Runge_Kutt(x0, i, h, tmp);
+		fprintf(out, "%.1lf %.5lf\n", i, tv[0]);
+		y[j] = tv[0];
+		dy[j] = tv[1];
+		printf("%.1lf\t%.3lf\t%.3lf\n", i, y[j], dy[j]);
 		j++;
 	}
 	printf("\n");
@@ -396,10 +355,7 @@ int main()
 
 	fclose(splines_out);
 
-	double Eps = 1e-5;
-	printf("Integral = %.8lf\n", double_counting(&Form_of_Simpson, a, b, h, Eps, y));
-	// printf("My = %.10lf\n", Form_of_Trapeziums(a, b, h, y));
-	// printf("Sanka =    %.10lf\n", SimpsonIntegr(a, b, y));
+	printf("I = %.10lf\n", Form_of_Simpson(a, b, h, y));
 
 	return 0;
 }
