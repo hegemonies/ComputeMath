@@ -333,13 +333,14 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y)
 
 		double mod = 0.0;
 		int j = 0;
-		for (int i = 0; j < count_elem * 2; i++, j += 2) {
-			mod = y_prev[i] - y_cur[j];
+		for (int i = 0; j < count_elem / 2; i++, j += 2) {
+			mod = y_prev[i][0] - y_cur[j][0];
 			if (fabs(mod) > Eps) {
+				printf("\tCHE\n");
 				break;
 			}
 		}
-		if (j == (count_elem * 2) - 1) {
+		if (j == (count_elem * 2) - 2) {
 			check = 0;
 		}
 
