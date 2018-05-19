@@ -305,6 +305,50 @@ double double_counting(double (*method)(double, double, double, double *), doubl
 	return cur;
 }
 
+
+double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y)
+{
+	int check = 1;
+	double **y_prev;
+	double **y_cur;
+	do {
+		int count_elem = (b - a) / h;
+		printf("count_elem = %d\n", count_elem);
+		y_prev = malloc(sizeof(double*) * count_elem);
+		double t = a;
+		for (int i = 0; t < b; i++, t += h) {
+			y_prev[i] = malloc(sizeof(double*) * 2);
+			y_prev[i] = Runge_Kutt(a, t, h, y);
+		}
+
+		h /= 2;
+		count_elem = (b - a) / h;
+		printf("count_elem = %d\n", count_elem);
+		t = a;
+		y_cur = malloc(sizeof(double*) * count_elem);
+		for (int i = 0; t < b; i++, t += h) {
+			y_cur[i] = malloc(sizeof(double*) * 2);
+			y_cur[i] = Runge_Kutt(a, t, h, y);
+		}
+
+		double mod = 0.0;
+		int j = 0;
+		for (int i = 0; j < count_elem * 2; i++, j += 2) {
+			mod = y_prev[i] - y_cur[j];
+			if (fabs(mod) > Eps) {
+				break;
+			}
+		}
+		if (j == (count_elem * 2) - 1) {
+			check = 0;
+		}
+
+		printf("chee\n");
+	} while (check);
+
+	return y_cur;
+}
+
 int main()
 {
 	double a = 0.0;
@@ -325,18 +369,26 @@ int main()
 
 	FILE *out = fopen("Runge_Kutt.txt", "w");
 	
-	double dy[size + 1];
+	// double dy[size + 1];
 
-	int j = 0;
-	printf("\ty(x)\ty\'(x)\n");
-	for (double i = a; i <= b; i += h) {
-		double tmp[2] = { y0, D1 };
-		double *tv = Runge_Kutt(x0, i, h, tmp);
-		fprintf(out, "%.1lf %.5lf\n", i, tv[0]);
-		y[j] = tv[0];
-		dy[j] = tv[1];
-		printf("%.1lf\t%.3lf\t%.3lf\n", i, y[j], dy[j]);
-		j++;
+	// int j = 0;
+	printf("x\ty(x)\ty\'(x)\n");
+	// for (double i = a; i <= b; i += h) {
+	// 	double tmp[2] = { y0, D1 };
+	// 	// double *tv = Runge_Kutt(x0, i, h, tmp);
+	// 	double *tv = dbl_counting_Runge(x0, i, h, tmp);
+	// 	fprintf(out, "%.1lf %.5lf\n", i, tv[0]);
+	// 	y[j] = tv[0];
+	// 	dy[j] = tv[1];
+	// 	printf("%.1lf\t%.3lf\t%.3lf\n", i, y[j], dy[j]);
+	// 	j++;
+	// }
+	double Eps = 1e-2;
+
+	double tmp[2] = { y0, D1 };
+	double **yt = dbl_counting_Runge(a, b, h, Eps, tmp);
+	for (int i = 0; i < 6; i++) {
+			printf("\t%.3lf\t%.3lf\n", yt[i][0], yt[i][1]);
 	}
 	printf("\n");
 
@@ -355,7 +407,9 @@ int main()
 
 	fclose(splines_out);
 
-	printf("I = %.10lf\n", Form_of_Simpson(a, b, h, y));
+
+	// printf("I = %.10lf\n", Form_of_Simpson(a, b, h, y));
+	printf("I = %.10lf\n", double_counting(Form_of_Simpson, a, b, h, Eps, y));
 
 	return 0;
 }
