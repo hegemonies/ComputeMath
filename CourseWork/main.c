@@ -75,7 +75,6 @@ double *Runge_Kutt(double a, double b, double h, double *y0)
 	return y;
 }
 
-
 double MethodShooting(double x0, double x1, double y0, double y1, double h)
 {
 	double al = 1.0;
@@ -267,20 +266,44 @@ double Splines(double *X, double *Y, double x, int n)
 	return s;
 }
 
-double Form_of_Simpson(double a, double b, double h, double *y)
+// double Form_of_Simpson(double a, double b, double h, double *y)
+// {
+// 	double res = 0.0;
+// 	int n = (int)((a + b) / h) + 1;
+
+// 	for (int i = 1; i < 2*n - 1; i += 2)
+// 		res += 4 * y[i];
+
+// 	for (int i = 2; i < n - 2; i += 2) 
+// 		res += 2 * y[i];
+
+// 	res += y[0] + y[n];
+// 	res = res * h / 3;
+
+
+// 	return res;
+// }
+
+double Form_of_Simpson(double a, double b, double h, double *y0)
 {
 	double res = 0.0;
-	int n = (int)((a + b) / h) + 1;
 
-	for (int i = 1; i < 2*n - 1; i += 2)
-		res += 4 * y[i];
+	double j = a;
 
-	for (int i = 2; i < n - 2; i += 2) 
-		res += 2 * y[i];
+	double *tmp;
 
-	res += y[0] + y[n];
-	res = res * h / 3;
+	for (int i = 1; j <= b - h; i++, j += h) {
+		tmp = Runge_Kutt(a, j, h, y0);
+		res += (i % 2 ? 4 : 2) * tmp[0];
+	}
 
+	tmp = Runge_Kutt(a, 0, h, y0);
+	res += tmp[0];
+	tmp = Runge_Kutt(a, b, h, y0);
+	res += tmp[0];
+	res = (res * h) / 3;
+
+	// res = ((b - a) / 6) * (F(a) + 4 * F((a + b) / 2) + F(b));
 
 	return res;
 }
@@ -293,7 +316,7 @@ double double_counting(double (*method)(double, double, double, double *), doubl
 	double cur = method(a, b, h, y);
 
 	int count = 0;
-	while (fabs(prev - cur) > Eps) {
+	while (fabs(prev - cur) >= Eps) {
 		prev = cur;
 		h /= 2;
 		cur = method(a, b, h, y);
@@ -306,46 +329,57 @@ double double_counting(double (*method)(double, double, double, double *), doubl
 }
 
 
-double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y)
+double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y, int *count, double *h_)
 {
-	int check = 1;
+	// int check = 1;
 	double **y_prev;
 	double **y_cur;
+	double max;
+	int count_elem;
 	do {
-		int count_elem = (b - a) / h;
-		printf("count_elem = %d\n", count_elem);
+		count_elem = (b - a) / h;
+		// printf("count_elem = %d\n", count_elem);
 		y_prev = malloc(sizeof(double*) * count_elem);
 		double t = a;
 		for (int i = 0; t < b; i++, t += h) {
-			y_prev[i] = malloc(sizeof(double*) * 2);
+			y_prev[i] = malloc(sizeof(double) * 2);
 			y_prev[i] = Runge_Kutt(a, t, h, y);
 		}
 
 		h /= 2;
 		count_elem = (b - a) / h;
-		printf("count_elem = %d\n", count_elem);
+		// printf("count_elem = %d\n", count_elem);
 		t = a;
 		y_cur = malloc(sizeof(double*) * count_elem);
 		for (int i = 0; t < b; i++, t += h) {
-			y_cur[i] = malloc(sizeof(double*) * 2);
+			y_cur[i] = malloc(sizeof(double) * 2);
 			y_cur[i] = Runge_Kutt(a, t, h, y);
 		}
 
 		double mod = 0.0;
+		max = -9999;
 		int j = 0;
 		for (int i = 0; j < count_elem / 2; i++, j += 2) {
 			mod = y_prev[i][0] - y_cur[j][0];
-			if (fabs(mod) > Eps) {
-				printf("\tCHE\n");
-				break;
+			if (fabs(mod) > max) {
+				max = fabs(mod);
 			}
 		}
-		if (j == (count_elem * 2) - 2) {
-			check = 0;
-		}
 
-		printf("chee\n");
-	} while (check);
+		// for (int i = 0; i < count_elem / 2; i++) {
+		// 	free(y_prev[i]);
+		// }
+		// for (int i = 0; i < count_elem; i++) {
+		// 	free(y_cur[i]);
+		// }
+		// free(y_prev);
+		// free(y_cur);
+
+		// printf("max = %lf\n", max);
+	} while (max > Eps);
+
+	*count = count_elem;
+	*h_ = h;
 
 	return y_cur;
 }
@@ -355,7 +389,6 @@ int main()
 	double a = 0.0;
 	double b = 1.0;
 	double h = 0.2;
-
 	int size = (a + b) / h;
 
 	double y[size + 1];
@@ -384,18 +417,47 @@ int main()
 	// 	printf("%.1lf\t%.3lf\t%.3lf\n", i, y[j], dy[j]);
 	// 	j++;
 	// }
-	double Eps = 1e-2;
+	double Eps = 1e-4;
 
 	double tmp[2] = { y0, D1 };
-	double **yt = dbl_counting_Runge(a, b, h, Eps, tmp);
-	for (int i = 0; i < 6; i++) {
-			printf("\t%.3lf\t%.3lf\n", yt[i][0], yt[i][1]);
+	int count_elem;
+	double h_;
+	double **yt = dbl_counting_Runge(a, b, h, Eps, tmp, &count_elem, &h_);
+
+	int i_count[6];
+	i_count[0] = 0;
+	// y[0] = yt[0][0];
+	double x[6] = { 0.0, 0.2, 0.4, 0.6, 0.8, 1.0 };
+	double t = a;
+
+	for (int i = 0, j = 0; i <= count_elem; i++) {
+		// if (t == x[j]) {
+		if (fabs(t - x[j]) <= 1e-4) {
+			i_count[j] = i;
+			// printf("i_count = %d\n", i_count[j]);
+			// printf("t = %lf\n", t);
+			// printf("x[%d] = %lf\n", j, x[j]);
+			y[j] = yt[i][0];
+			// printf("y[%d] = %lf\n", j, y[j]);
+			j++;
+		}
+
+		t += h_;
+	}
+	// printf("count = %d\n", count_elem);
+	// printf("h_ = %lf\n", h_);
+
+	double m = 0.0;
+	for (int i = 0; i < 6; i++, m += h) {
+		// printf("%.2lf\t%.3lf\t%.3lf\n", m, yt[i_count[i]][0], yt[i_count[i]][1]);
+		printf("%.2lf", m);
+		printf("%.3lf\t", yt[i_count[i]][0]);
+		printf("%.3lf\t", yt[i_count[i]][1]);
 	}
 	printf("\n");
 
 	fclose(out);
 
-	double x[6] = { 0.0, 0.2, 0.4, 0.6, 0.8, 1.0 };
 
 	FILE *splines_out = fopen("Splines.txt", "w");
 	
@@ -408,9 +470,9 @@ int main()
 
 	fclose(splines_out);
 
-
-	// printf("I = %.10lf\n", Form_of_Simpson(a, b, h, y));
-	printf("I = %.10lf\n", double_counting(Form_of_Simpson, a, b, h, Eps, y));
+	Eps = 1e-2;
+	// printf("I = %.10lf\n", Form_of_Simpson(a, b, h, tmp));
+	printf("I = %.10lf\n", double_counting(Form_of_Simpson, a, b, h, Eps, tmp));
 
 	return 0;
 }
