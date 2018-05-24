@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <math.h>
 
-double eps = 1e-6;
+double eps = 1e-4;
 
 double outD1 = 0.0;
 
 double diff(double x, double y, double D1, double D2)
 {
 	if (x == 0) {
-		x = 0.0000000000000000000000001;
+		x = 0.0001;
 	}
 	return pow(D2, 5) - cos(x) * D2 - sin(x) - 5 * log(x) * D1 - y * (x + 3);
 }
@@ -266,24 +266,6 @@ double Splines(double *X, double *Y, double x, int n)
 	return s;
 }
 
-// double Form_of_Simpson(double a, double b, double h, double *y)
-// {
-// 	double res = 0.0;
-// 	int n = (int)((a + b) / h) + 1;
-
-// 	for (int i = 1; i < 2*n - 1; i += 2)
-// 		res += 4 * y[i];
-
-// 	for (int i = 2; i < n - 2; i += 2) 
-// 		res += 2 * y[i];
-
-// 	res += y[0] + y[n];
-// 	res = res * h / 3;
-
-
-// 	return res;
-// }
-
 double Form_of_Simpson(double a, double b, double h, double *y0)
 {
 	double res = 0.0;
@@ -302,8 +284,6 @@ double Form_of_Simpson(double a, double b, double h, double *y0)
 	tmp = Runge_Kutt(a, b, h, y0);
 	res += tmp[0];
 	res = (res * h) / 3;
-
-	// res = ((b - a) / 6) * (F(a) + 4 * F((a + b) / 2) + F(b));
 
 	return res;
 }
@@ -341,7 +321,7 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y,
 		// printf("count_elem = %d\n", count_elem);
 		y_prev = malloc(sizeof(double*) * count_elem);
 		double t = a;
-		for (int i = 0; t < b; i++, t += h) {
+		for (int i = 0; fabs(t - b) >= 1e-6; i++, t += h) {
 			y_prev[i] = malloc(sizeof(double) * 2);
 			y_prev[i] = Runge_Kutt(a, t, h, y);
 		}
@@ -351,7 +331,7 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y,
 		// printf("count_elem = %d\n", count_elem);
 		t = a;
 		y_cur = malloc(sizeof(double*) * count_elem);
-		for (int i = 0; t < b; i++, t += h) {
+		for (int i = 0; fabs(t - b) >= 1e-6; i++, t += h) {
 			y_cur[i] = malloc(sizeof(double) * 2);
 			y_cur[i] = Runge_Kutt(a, t, h, y);
 		}
@@ -365,6 +345,7 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y,
 				max = fabs(mod);
 			}
 		}
+		printf("max = %.4lf\n", max);
 
 		// for (int i = 0; i < count_elem / 2; i++) {
 		// 	free(y_prev[i]);
@@ -376,7 +357,7 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y,
 		// free(y_cur);
 
 		// printf("max = %lf\n", max);
-	} while (max > Eps);
+	} while (fabs(max) > Eps);
 
 	*count = count_elem;
 	*h_ = h;
@@ -417,7 +398,7 @@ int main()
 	// 	printf("%.1lf\t%.3lf\t%.3lf\n", i, y[j], dy[j]);
 	// 	j++;
 	// }
-	double Eps = 1e-4;
+	double Eps = 1e-3;
 
 	double tmp[2] = { y0, D1 };
 	int count_elem;
@@ -428,31 +409,41 @@ int main()
 	i_count[0] = 0;
 	// y[0] = yt[0][0];
 	double x[6] = { 0.0, 0.2, 0.4, 0.6, 0.8, 1.0 };
-	double t = a;
+	// double t = a;
 
-	for (int i = 0, j = 0; i <= count_elem; i++) {
-		// if (t == x[j]) {
-		if (fabs(t - x[j]) <= 1e-4) {
-			i_count[j] = i;
-			// printf("i_count = %d\n", i_count[j]);
-			// printf("t = %lf\n", t);
-			// printf("x[%d] = %lf\n", j, x[j]);
-			y[j] = yt[i][0];
-			// printf("y[%d] = %lf\n", j, y[j]);
-			j++;
-		}
+	// for (int i = 0, j = 0; i < count_elem; i++) {
+	// 	// if (t == x[j]) {
+	// 	if (fabs(t - x[j]) < 1e-4) {
+	// 		i_count[j] = i;
+	// 		// printf("i_count = %d\n", i_count[j]);
+	// 		// printf("t = %lf\n", t);
+	// 		// printf("x[%d] = %lf\n", j, x[j]);
+	// 		y[j] = yt[i][0];
+	// 		// printf("y[%d] = %lf\n", j, y[j]);
+	// 		j++;
+	// 	}
 
-		t += h_;
+	// 	t += h_;
+	// }
+	int t = count_elem / 5;
+	for (int j = 1; j < 6; j++) {
+		i_count[j] = t * j;
 	}
+	i_count[5]--;
 	// printf("count = %d\n", count_elem);
 	// printf("h_ = %lf\n", h_);
+	// printf("yt[] = %.5lf\n", yt[count_elem - 1][0]);
+
+	// for (int j = 0; j < 6; j++) {
+	// 	printf("i_count[%d] = %d\n", j, i_count[j]);
+	// }
 
 	double m = 0.0;
 	for (int i = 0; i < 6; i++, m += h) {
-		// printf("%.2lf\t%.3lf\t%.3lf\n", m, yt[i_count[i]][0], yt[i_count[i]][1]);
-		printf("%.2lf", m);
+		printf("%.2lf\t", m);
 		printf("%.3lf\t", yt[i_count[i]][0]);
-		printf("%.3lf\t", yt[i_count[i]][1]);
+		printf("%.3lf\n", yt[i_count[i]][1]);
+		y[i] = yt[i_count[i]][0];
 	}
 	printf("\n");
 
@@ -463,7 +454,7 @@ int main()
 	
 	for (double i = a; i <= b; i += 0.1) {
 		double tmp = Splines(x, y, i, 6);
-		fprintf(splines_out, "%.1lf %.5lf\n", i, tmp);
+		fprintf(splines_out, "%lf %lf\n", i, tmp);
 		printf("%.1lf %.3lf\n", i, tmp);
 	}
 	printf("\n");
