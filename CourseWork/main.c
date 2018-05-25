@@ -12,11 +12,6 @@ double diff(double x, double y, double D1, double D2)
 	return pow(D2, 5) - cos(x) * D2 - sin(x) - 5 * log(x) * D1 - y * (x + 3);
 }
 
-// double diff(double x, double y, double D1, double D2)
-// {
-// 	return D2 + D1 + y + x;
-// }
-
 double *addition_of_vectors(double *v1, double *v2, int n)
 {
 	double *v3 = malloc(sizeof(double) * n);
@@ -314,14 +309,12 @@ double double_counting(double (*method)(double, double, double, double *), doubl
 
 double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y, int *count, double *h_)
 {
-	// int check = 1;
 	double **y_prev;
 	double **y_cur;
 	double max;
 	int count_elem;
 	do {
 		count_elem = (b - a) / h;
-		// printf("count_elem = %d\n", count_elem);
 		y_prev = malloc(sizeof(double*) * count_elem);
 		double t = a;
 		for (int i = 0; fabs(t - b) >= 1e-8; i++, t += h) {
@@ -331,7 +324,6 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y,
 
 		h /= 2;
 		count_elem = (b - a) / h;
-		// printf("count_elem = %d\n", count_elem);
 		t = a;
 		y_cur = malloc(sizeof(double*) * count_elem);
 		for (int i = 0; fabs(t - b) >= 1e-8; i++, t += h) {
@@ -347,24 +339,9 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y,
 		for (i = 0; j < del + (del % 2 ? 1 : 0); i++, j += 2) {
 			mod = fabs(y_prev[i][0] - y_cur[j][0]);
 			if (mod > max) {
-				// printf("%.5lf - %.5lf\n", y_prev[i][0], y_cur[j][0]);
 				max = mod;
 			}
 		}
-		// printf("i = %d\n", i);
-		// printf("j = %d\n", j);
-		// printf("max = %.4lf\n", max);
-
-		// for (int i = 0; i < count_elem / 2; i++) {
-		// 	free(y_prev[i]);
-		// }
-		// for (int i = 0; i < count_elem; i++) {
-		// 	free(y_cur[i]);
-		// }
-		// free(y_prev);
-		// free(y_cur);
-
-		// printf("max = %lf\n", max);
 	} while (fabs(max) >= Eps);
 
 	*count = count_elem;
@@ -405,31 +382,11 @@ int main()
 	double x1 = 1.0;
 	double y1 = 2.0;
 
-	// double x0 = 0.0;
-	// double y0 = 2.0;
-	// double x1 = 1.0;
-	// double y1 = 0.8549773399;
-
-	// double D1 = MethodShooting(x0, x1, y0, y1, 0.05);
 	double D1 = dbl_count_D1(x0, x1, y0, y1, h, 1e-3);
 	printf("D1 = %.3lf\n", D1);
 
 	FILE *out = fopen("Runge_Kutt.txt", "w");
-	
-	// double dy[size + 1];
-
-	// int j = 0;
 	printf("x\ty(x)\ty\'(x)\n");
-	// for (double i = a; i <= b; i += h) {
-	// 	double tmp[2] = { y0, D1 };
-	// 	// double *tv = Runge_Kutt(x0, i, h, tmp);
-	// 	double *tv = dbl_counting_Runge(x0, i, h, tmp);
-	// 	fprintf(out, "%.1lf %.5lf\n", i, tv[0]);
-	// 	y[j] = tv[0];
-	// 	dy[j] = tv[1];
-	// 	printf("%.1lf\t%.3lf\t%.3lf\n", i, y[j], dy[j]);
-	// 	j++;
-	// }
 	double Eps = 1e-3;
 
 	double tmp[2] = { y0, D1 };
@@ -439,36 +396,12 @@ int main()
 
 	int i_count[6];
 	i_count[0] = 0;
-	// y[0] = yt[0][0];
 	double x[6] = { 0.0, 0.2, 0.4, 0.6, 0.8, 1.0 };
-	// double t = a;
-
-	// for (int i = 0, j = 0; i < count_elem; i++) {
-	// 	// if (t == x[j]) {
-	// 	if (fabs(t - x[j]) < 1e-4) {
-	// 		i_count[j] = i;
-	// 		// printf("i_count = %d\n", i_count[j]);
-	// 		// printf("t = %lf\n", t);
-	// 		// printf("x[%d] = %lf\n", j, x[j]);
-	// 		y[j] = yt[i][0];
-	// 		// printf("y[%d] = %lf\n", j, y[j]);
-	// 		j++;
-	// 	}
-
-	// 	t += h_;
-	// }
 	int t = count_elem / 5;
 	for (int j = 1; j < 6; j++) {
 		i_count[j] = t * j;
 	}
 	i_count[5]--;
-	// printf("count = %d\n", count_elem);
-	// printf("h_ = %lf\n", h_);
-	// printf("yt[] = %.5lf\n", yt[count_elem - 1][0]);
-
-	// for (int j = 0; j < 6; j++) {
-	// 	printf("i_count[%d] = %d\n", j, i_count[j]);
-	// }
 
 	double ta = a;
 	for (int i = 0; i < count_elem; i++, ta += h_) {
@@ -492,14 +425,12 @@ int main()
 	for (double i = a; i <= b; i += h_) {
 		double tmp = Splines(x, y, i, 6);
 		fprintf(splines_out, "%lf %lf\n", i, tmp);
-		// printf("%.2lf %.3lf\n", i, tmp);
 	}
 	printf("\n");
 
 	fclose(splines_out);
 
 	Eps = 1e-2;
-	// printf("I = %.10lf\n", Form_of_Simpson(a, b, h, tmp));
 	printf("Integration = %.10lf\n", double_counting(Form_of_Simpson, a, b, h, Eps, tmp));
 
 	return 0;
