@@ -470,6 +470,11 @@ int main()
 	// 	printf("i_count[%d] = %d\n", j, i_count[j]);
 	// }
 
+	double ta = a;
+	for (int i = 0; i < count_elem; i++, ta += h_) {
+		fprintf(out, "%.4lf %lf\n", ta, yt[i][0]);
+	}
+
 	double m = 0.0;
 	for (int i = 0; i < 6; i++, m += h) {
 		printf("%.2lf\t", m);
@@ -484,10 +489,10 @@ int main()
 	printf("Spleins interpolation:\n");
 	FILE *splines_out = fopen("Splines.txt", "w");
 	
-	for (double i = a; i <= b; i += 0.1) {
+	for (double i = a; i <= b; i += h_) {
 		double tmp = Splines(x, y, i, 6);
 		fprintf(splines_out, "%lf %lf\n", i, tmp);
-		printf("%.2lf %.3lf\n", i, tmp);
+		// printf("%.2lf %.3lf\n", i, tmp);
 	}
 	printf("\n");
 

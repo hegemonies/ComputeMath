@@ -13,4 +13,12 @@ set ytics axis
 set xrange [0:1]
 set yrange [0:3]
 
-plot 'Splines.txt' using 1:2 with linespoints lw 1 lt rgb 'purple'
+plot 'Splines.txt' using 1:2 with linespoints lw 1 lt rgb 'blue'
+
+
+set output 'Runge_Kutt.png'
+plot 'Runge_Kutt.txt' using 1:2 lt rgb 'red'
+
+set output 'Diffirent.png'
+plot 'Splines.txt' using 1:2 lt rgb 'blue', \
+    'Runge_Kutt.txt' using 1:2 lt rgb 'red'
