@@ -481,13 +481,13 @@ int main()
 
 	fclose(out);
 
-
+	printf("Spleins interpolation:\n");
 	FILE *splines_out = fopen("Splines.txt", "w");
 	
 	for (double i = a; i <= b; i += 0.1) {
 		double tmp = Splines(x, y, i, 6);
 		fprintf(splines_out, "%lf %lf\n", i, tmp);
-		printf("%.1lf %.3lf\n", i, tmp);
+		printf("%.2lf %.3lf\n", i, tmp);
 	}
 	printf("\n");
 
@@ -495,7 +495,7 @@ int main()
 
 	Eps = 1e-2;
 	// printf("I = %.10lf\n", Form_of_Simpson(a, b, h, tmp));
-	printf("I = %.10lf\n", double_counting(Form_of_Simpson, a, b, h, Eps, tmp));
+	printf("Integration = %.10lf\n", double_counting(Form_of_Simpson, a, b, h, Eps, tmp));
 
 	return 0;
 }
