@@ -378,6 +378,19 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y,
 	return y_cur;
 }
 
+double dbl_count_D1(double x0, double x1, double y0, double y1, double h, double Eps)
+{
+	double prev;
+	double cur;
+	do {
+		prev = MethodShooting(x0, x1, y0, y1, h);
+		h /= 2;
+		cur = MethodShooting(x0, x1, y0, y1, h);
+	} while (fabs(prev - cur) >= Eps);
+	
+	return cur;
+}
+
 int main()
 {
 	double a = 0.0;
@@ -397,7 +410,8 @@ int main()
 	// double x1 = 1.0;
 	// double y1 = 0.8549773399;
 
-	double D1 = MethodShooting(x0, x1, y0, y1, 0.05);
+	// double D1 = MethodShooting(x0, x1, y0, y1, 0.05);
+	double D1 = dbl_count_D1(x0, x1, y0, y1, h, 1e-3);
 	printf("D1 = %.3lf\n", D1);
 
 	FILE *out = fopen("Runge_Kutt.txt", "w");
