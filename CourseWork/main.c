@@ -136,21 +136,21 @@ double MethodShooting(double x0, double x1, double y0, double y1, double h)
 	double tmp[2];
 	tmp[0] = y0;
 	double *vt;
-	double **dbl;
-	int count;
+	// double **dbl;
+	// int count;
 	do {
 		tmp[1] = al;
-		// vt = Runge_Kutt(x0, x1, h, tmp);
-		count = 0;
-		dbl = dbl_counting_Runge(x0, x1, h, 1e-2, tmp, &count, NULL);
-		printf("count = %d\n", count);
-		vt = dbl[count - 1];
+		vt = Runge_Kutt(x0, x1, h, tmp);
+		// count = 0;
+		// dbl = dbl_counting_Runge(x0, x1, h, 1e-2, tmp, &count, NULL);
+		// printf("count = %d\n", count);
+		// vt = dbl[count - 1];
 		fa = vt[0] - y1;
 		tmp[1] = bt;
-		// vt = Runge_Kutt(x0, x1, h, tmp);
-		dbl = dbl_counting_Runge(x0, x1, h, 1e-2, tmp, &count, NULL);
-		printf("count = %d\n", count);
-		vt = dbl[count - 1];
+		vt = Runge_Kutt(x0, x1, h, tmp);
+		// dbl = dbl_counting_Runge(x0, x1, h, 1e-2, tmp, &count, NULL);
+		// printf("count = %d\n", count);
+		// vt = dbl[count - 1];
 
 		fb = vt[0] - y1;
 		al -= h;
@@ -158,6 +158,8 @@ double MethodShooting(double x0, double x1, double y0, double y1, double h)
 	} while (fa * fb > 0);
 
 	printf("check\n");
+	printf("al = %lf\n", al);
+	printf("bt = %lf\n", bt);
 
 	double c = 0.0;
 	double *tmp1;
@@ -342,6 +344,76 @@ double Splines(double *X, double *Y, double x, int n)
 	return s;
 }
 
+double Splines1(double x_find, double *x, double *y, int n)
+{
+	double res = 0.0;
+
+	int _i = 0;
+	for (_i = 0; x_find > x[_i] && _i < n; _i++) { }
+
+	double *c = calloc(0.0, sizeof(double*) * n * n);
+
+
+	double *h = malloc(sizeof(double));
+	set_h(h, x, n - 1);
+
+	set_C(c, h, n);
+
+	// for (int i = 1; i < n - 1; i++) {
+	// 	c[i] = calloc(0.0, sizeof(double) * (n));
+	// 	for (int j = 1; j < n - 1; j++) {
+	// 		if (i == j) {
+	// 			c[i][j] = ((x[i] - x[i - 1]) + (x[i + 1] - x[i])) / 3;
+	// 			continue;
+	// 		}
+	// 		if (j == i + 1) {
+	// 			c[i][j] = (x[i + 1] - x[i]) / 6;
+	// 			continue;
+	// 		}
+	// 		if (j == i - 1) {
+	// 			c[i][j] = (x[i] - x[i - 1]) / 6;
+	// 			continue;
+	// 		}
+	// 		c[i][j] = 0;
+	// 	}
+	// }
+
+
+	printf("CHECK\n");
+
+	double *d = calloc(0.0, sizeof(double) * (n - 1));
+
+	for (int i = 1; i < n - 1; i++) {
+		d[i] = ((y[i + 1] - y[i]) / (x[i + 1] - x[i])) - ((y[i] - y[i - 1]) / (x[i - 1] - x[i]));
+	}
+
+	double *M = calloc(0.0, sizeof(double) * (n - 1));
+	// for (int i = 0; i < n - 2; i++) {
+	// 	double tmp = 0.0;
+	// 	for (int j = ((i == 0) ? i : i - 1); j < ((i == n - 2) ? (i + 2) : (i + 3)); j++) {
+	// 		tmp += c[i][j];
+	// 	}
+	// 	M[i + 1] = d[i] / tmp;
+	// }
+
+	set_M(M, c, d, n);
+
+printf("CHE\n");
+
+	res = M[_i - 1] * (pow(x[_i] - x_find, 3) / ((x[_i] - x[_i - 1]) * 6));
+	res += M[_i]  * (pow(x_find - x[_i - 1], 3) / (6 * (x[_i] - x[_i - 1])));
+	res += (y[_i - 1] - (M[_i - 1] * pow(x[_i] - x[_i - 1], 2)) / 6) * ((x[_i] - x_find) / (x[_i] - x[_i - 1]));
+	res += (y[_i] - ((M[_i] * pow(x[_i] - x[_i - 1], 2)) / 6)) * ((x_find - x[_i - 1]) / (x[_i] - x[_i - 1]));
+
+	// for (int i = 0; i < n - 1; i++)
+	// 	free(c[i]);
+	// free(c);
+	// free(d);
+	// free(M);
+
+	return res;
+}
+
 double Form_of_Simpson(double a, double b, double h, double *y0)
 {
 	double res = 0.0;
@@ -385,8 +457,6 @@ double double_counting(double (*method)(double, double, double, double *), doubl
 }
 
 
-
-
 double dbl_count_D1(double x0, double x1, double y0, double y1, double h, double Eps)
 {
 	double prev;
@@ -414,8 +484,8 @@ int main()
 	double x1 = 1.0;
 	double y1 = 2.0;
 
-	// double D1 = dbl_count_D1(x0, x1, y0, y1, h, 1e-3);
-	double D1 = MethodShooting(x0, x1, y0, y1, h);
+	double D1 = dbl_count_D1(x0, x1, y0, y1, h, 1e-3);
+	// double D1 = MethodShooting(x0, x1, y0, y1, h);
 	printf("D1 = %.3lf\n", D1);
 
 	FILE *out = fopen("Runge_Kutt.txt", "w");
@@ -456,7 +526,8 @@ int main()
 	FILE *splines_out = fopen("Splines.txt", "w");
 	
 	for (double i = a; i <= b; i += h_) {
-		double tmp = Splines(x, y, i, 6);
+		// double tmp = Splines(x, y, i, 6);
+		double tmp = Splines1(i, x, y, 6);
 		fprintf(splines_out, "%lf %lf\n", i, tmp);
 	}
 	printf("\n");
@@ -464,7 +535,7 @@ int main()
 	fclose(splines_out);
 
 	Eps = 1e-2;
-	printf("Integration = %.10lf\n", double_counting(Form_of_Simpson, a, b, h, Eps, tmp));
+	// printf("Integration = %.10lf\n", double_counting(Form_of_Simpson, a, b, h_, Eps, tmp));
 
 	return 0;
 }
