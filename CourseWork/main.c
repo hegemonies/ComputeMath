@@ -73,6 +73,59 @@ double *Runge_Kutt(double a, double b, double h, double *y0)
 	return y;
 }
 
+double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y, int *count, double *h_)
+{
+	double **y_prev;
+	double **y_cur;
+	double max;
+	int count_elem;
+	do {
+		count_elem = (b - a) / h;
+		y_prev = malloc(sizeof(double*) * count_elem);
+		double t = a;
+		for (int i = 0; fabs(t - b) >= 1e-8; i++, t += h) {
+			y_prev[i] = malloc(sizeof(double) * 2);
+			y_prev[i] = Runge_Kutt(a, t, h, y);
+		}
+
+		h /= 2;
+		count_elem = (b - a) / h;
+		t = a;
+		y_cur = malloc(sizeof(double*) * count_elem);
+		for (int i = 0; fabs(t - b) >= 1e-8; i++, t += h) {
+			y_cur[i] = malloc(sizeof(double) * 2);
+			y_cur[i] = Runge_Kutt(a, t, h, y);
+		}
+
+		double mod = 0.0;
+		max = 0;
+		int j = 0;
+		int del = count_elem;
+		int i;
+		for (i = 0; j < del + (del % 2 ? 1 : 0); i++, j += 2) {
+			mod = fabs(y_prev[i][0] - y_cur[j][0]);
+			if (mod > max) {
+				max = mod;
+			}
+		}
+	} while (fabs(max) >= Eps);
+
+	if (count) {
+		*count = count_elem;
+	}
+
+	if (h_) {
+		*h_ = h;
+	}
+
+	for (int i = 0, j = 0; i < count_elem; i += 2, j++) {
+		y_cur[i][0] -= (y_cur[i][0] - y_prev[j][0]) / 3;
+		y_cur[i][1] -= (y_cur[i][1] - y_prev[j][1]) / 3;
+	}
+
+	return y_cur;
+}
+
 double MethodShooting(double x0, double x1, double y0, double y1, double h)
 {
 	double al = 1.0;
@@ -81,39 +134,64 @@ double MethodShooting(double x0, double x1, double y0, double y1, double h)
 	double fb = 0.0;
 
 	double tmp[2];
+	tmp[0] = y0;
 	double *vt;
-
+	double **dbl;
+	int count;
 	do {
-		tmp[0] = y0;
 		tmp[1] = al;
-		vt = Runge_Kutt(x0, x1, h, tmp);
+		// vt = Runge_Kutt(x0, x1, h, tmp);
+		count = 0;
+		dbl = dbl_counting_Runge(x0, x1, h, 1e-2, tmp, &count, NULL);
+		printf("count = %d\n", count);
+		vt = dbl[count - 1];
 		fa = vt[0] - y1;
 		tmp[1] = bt;
-		vt = Runge_Kutt(x0, x1, h, tmp);
+		// vt = Runge_Kutt(x0, x1, h, tmp);
+		dbl = dbl_counting_Runge(x0, x1, h, 1e-2, tmp, &count, NULL);
+		printf("count = %d\n", count);
+		vt = dbl[count - 1];
+
 		fb = vt[0] - y1;
 		al -= h;
 		bt += h;
 	} while (fa * fb > 0);
 
+	printf("check\n");
+
 	double c = 0.0;
-	while (fabs(bt - al) >= eps) {
-		c = (al + bt) / 2;
+	double *tmp1;
+	double *tmp2;
+	double *tmp4;
+	do {
 
 		tmp[1] = al;
-		double *tmp1 = Runge_Kutt(x0, x1, h, tmp);
+		tmp1 = Runge_Kutt(x0, x1, h, tmp);
 		tmp[1] = c;
-		double *tmp2 = Runge_Kutt(x0, x1, h, tmp);
+		tmp2 = Runge_Kutt(x0, x1, h, tmp);
 		tmp[1] = bt;
-		double *tmp4 = Runge_Kutt(x0, x1, h, tmp);
+		tmp4 = Runge_Kutt(x0, x1, h, tmp);
 
 		if ((((tmp1[0] - y1) * (tmp2[0] - y1)) < 0)) {
 			bt = c;
 		} else if ((((tmp2[0] - y1) * (tmp4[0] - y1)) < 0)) {
 			al = c;
 		}
-	}
+		printf("y1 = %lf\n", y1);
+		printf("tmp1[0] = %lf\n", tmp1[0]);
+		printf("tmp2[0] = %lf\n", tmp2[0]);
+		printf("tmp4[0] = %lf\n", tmp4[0]);
+		printf("tmp1[1] = %lf\n", tmp1[1]);
+		printf("tmp2[1] = %lf\n", tmp2[1]);
+		printf("tmp4[1] = %lf\n", tmp4[1]);
+		printf("al = %lf\n", al);
+		printf("bt = %lf\n", bt);
+		printf("c = %lf\n", c);
 
-	return (al + bt) / 2;
+		c = (al + bt) / 2;
+	} while (fabs(y1 - (tmp1[0] + tmp2[0] + tmp4[0]) / 3) > 1e-4);
+
+	return ((al + bt) / 2);
 }
 
 void set_h(double *h, double *X, int n)
@@ -307,53 +385,7 @@ double double_counting(double (*method)(double, double, double, double *), doubl
 }
 
 
-double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y, int *count, double *h_)
-{
-	double **y_prev;
-	double **y_cur;
-	double max;
-	int count_elem;
-	do {
-		count_elem = (b - a) / h;
-		y_prev = malloc(sizeof(double*) * count_elem);
-		double t = a;
-		for (int i = 0; fabs(t - b) >= 1e-8; i++, t += h) {
-			y_prev[i] = malloc(sizeof(double) * 2);
-			y_prev[i] = Runge_Kutt(a, t, h, y);
-		}
 
-		h /= 2;
-		count_elem = (b - a) / h;
-		t = a;
-		y_cur = malloc(sizeof(double*) * count_elem);
-		for (int i = 0; fabs(t - b) >= 1e-8; i++, t += h) {
-			y_cur[i] = malloc(sizeof(double) * 2);
-			y_cur[i] = Runge_Kutt(a, t, h, y);
-		}
-
-		double mod = 0.0;
-		max = 0;
-		int j = 0;
-		int del = count_elem;
-		int i;
-		for (i = 0; j < del + (del % 2 ? 1 : 0); i++, j += 2) {
-			mod = fabs(y_prev[i][0] - y_cur[j][0]);
-			if (mod > max) {
-				max = mod;
-			}
-		}
-	} while (fabs(max) >= Eps);
-
-	*count = count_elem;
-	*h_ = h;
-
-	for (int i = 0, j = 0; i < count_elem; i += 2, j++) {
-		y_cur[i][0] -= (y_cur[i][0] - y_prev[j][0]) / 3;
-		y_cur[i][1] -= (y_cur[i][1] - y_prev[j][1]) / 3;
-	}
-
-	return y_cur;
-}
 
 double dbl_count_D1(double x0, double x1, double y0, double y1, double h, double Eps)
 {
@@ -382,7 +414,8 @@ int main()
 	double x1 = 1.0;
 	double y1 = 2.0;
 
-	double D1 = dbl_count_D1(x0, x1, y0, y1, h, 1e-3);
+	// double D1 = dbl_count_D1(x0, x1, y0, y1, h, 1e-3);
+	double D1 = MethodShooting(x0, x1, y0, y1, h);
 	printf("D1 = %.3lf\n", D1);
 
 	FILE *out = fopen("Runge_Kutt.txt", "w");
