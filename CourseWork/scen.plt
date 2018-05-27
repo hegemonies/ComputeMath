@@ -9,6 +9,9 @@ set grid ytics lc rgb  '#555555' lw 1 lt 0
 set xtics axis
 set ytics axis
 
+set xrange[0:1]
+set yrange[0:3]
+
 set output 'Splines.png'
 plot 'Splines.txt' using 1:2 with linespoints lw 1 lt rgb 'blue'
 

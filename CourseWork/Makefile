@@ -1,2 +1,2 @@
 all:
-	gcc -std=c99 -Wall main.c -o main -g -O0 -lm
+	g++ -std=c++11 -Wall main.cpp -o main -g -O0 -lm
