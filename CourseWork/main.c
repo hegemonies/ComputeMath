@@ -470,6 +470,37 @@ double dbl_count_D1(double x0, double x1, double y0, double y1, double h, double
 	return cur;
 }
 
+
+double P(double x_find, double *x, double *y, int n)
+{
+	if (!x || !y) {
+		return -1;
+	}
+
+	double *res = calloc(n, sizeof(double));
+	double res_product;
+
+	for (int i = 0; i < n; i++) {
+		res_product = 1.0;
+		for (int j = 0; j < n; j++) {
+			if (i != j) {
+				res_product *= (x_find - x[j]) / (x[i] - x[j]);
+			}
+		}
+		res[i] = res_product * y[i];
+	}
+
+	res_product = 0.0;
+
+	for (int i = 0; i < n; i++) {
+		res_product += res[i];
+	}
+
+	free(res);
+
+	return res_product;
+}
+
 int main()
 {
 	double a = 0.0;
@@ -527,15 +558,16 @@ int main()
 	
 	for (double i = a; i <= b; i += h_) {
 		// double tmp = Splines(x, y, i, 6);
-		double tmp = Splines1(i, x, y, 6);
+		// double tmp = Splines1(i, x, y, 6);
+		double tmp = P(i, x, y, 6);
 		fprintf(splines_out, "%lf %lf\n", i, tmp);
 	}
 	printf("\n");
 
 	fclose(splines_out);
 
-	Eps = 1e-2;
-	// printf("Integration = %.10lf\n", double_counting(Form_of_Simpson, a, b, h_, Eps, tmp));
+	Eps = 1e-3;
+	printf("Integration = %.10lf\n", double_counting(Form_of_Simpson, a, b, h_, Eps, tmp));
 
 	return 0;
 }
