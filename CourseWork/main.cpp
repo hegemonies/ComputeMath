@@ -17,7 +17,6 @@ double diff(double x, double y, double D1, double D2)
 
 double *addition_of_vectors(double *v1, double *v2, int n)
 {
-	// double *v3 = malloc(sizeof(double) * n);
 	double *v3 = new double[n];
 
 	for (int i = 0; i < n; i++) {
@@ -29,7 +28,6 @@ double *addition_of_vectors(double *v1, double *v2, int n)
 
 double *multiple_dig_by_vector(double a, double *v, int n)
 {
-	// double *v2 = malloc(sizeof(double) * n);
 	double *v2 = new double[n];
 
 	for (int i = 0; i < n; i++) {
@@ -59,7 +57,6 @@ double *f(double x, double *y)
 			a = c;
 	}
 
-	// double *tmp_y = malloc(sizeof(double) * 2);
 	double *tmp_y = new double[2];
 	tmp_y[0] = y[1];
 	tmp_y[1] = (a + b) / 2;
@@ -87,11 +84,9 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y,
 	int count_elem;
 	do {
 		count_elem = (b - a) / h;
-		// y_prev = malloc(sizeof(double*) * count_elem);
 		y_prev = new double*[count_elem];
 		double t = a;
 		for (int i = 0; fabs(t - b) >= 1e-8; i++, t += h) {
-			// y_prev[i] = malloc(sizeof(double) * 2);
 			y_prev[i] = new double[2];
 			y_prev[i] = Runge_Kutt(a, t, h, y);
 		}
@@ -99,10 +94,8 @@ double **dbl_counting_Runge(double a, double b, double h, double Eps, double *y,
 		h /= 2;
 		count_elem = (b - a) / h;
 		t = a;
-		// y_cur = malloc(sizeof(double*) * count_elem);
 		y_cur = new double*[count_elem];
 		for (int i = 0; fabs(t - b) >= 1e-8; i++, t += h) {
-			// y_cur[i] = malloc(sizeof(double) * 2);
 			y_cur[i] = new double[2];
 			y_cur[i] = Runge_Kutt(a, t, h, y);
 		}
@@ -146,30 +139,18 @@ double MethodShooting(double x0, double x1, double y0, double y1, double h)
 	double tmp[2];
 	tmp[0] = y0;
 	double *vt;
-	// double **dbl;
-	// int count;
 	do {
 		tmp[1] = al;
 		vt = Runge_Kutt(x0, x1, h, tmp);
-		// count = 0;
-		// dbl = dbl_counting_Runge(x0, x1, h, 1e-2, tmp, &count, NULL);
-		// printf("count = %d\n", count);
-		// vt = dbl[count - 1];
 		fa = vt[0] - y1;
 		tmp[1] = bt;
 		vt = Runge_Kutt(x0, x1, h, tmp);
-		// dbl = dbl_counting_Runge(x0, x1, h, 1e-2, tmp, &count, NULL);
-		// printf("count = %d\n", count);
-		// vt = dbl[count - 1];
 
 		fb = vt[0] - y1;
 		al -= h;
 		bt += h;
 	} while (fa * fb > 0);
 
-	printf("check\n");
-	printf("al = %lf\n", al);
-	printf("bt = %lf\n", bt);
 
 	double c = 0.0;
 	double *tmp1;
@@ -189,262 +170,11 @@ double MethodShooting(double x0, double x1, double y0, double y1, double h)
 		} else if ((((tmp2[0] - y1) * (tmp4[0] - y1)) < 0)) {
 			al = c;
 		}
-		printf("y1 = %lf\n", y1);
-		printf("tmp1[0] = %lf\n", tmp1[0]);
-		printf("tmp2[0] = %lf\n", tmp2[0]);
-		printf("tmp4[0] = %lf\n", tmp4[0]);
-		printf("tmp1[1] = %lf\n", tmp1[1]);
-		printf("tmp2[1] = %lf\n", tmp2[1]);
-		printf("tmp4[1] = %lf\n", tmp4[1]);
-		printf("al = %lf\n", al);
-		printf("bt = %lf\n", bt);
-		printf("c = %lf\n", c);
 
 		c = (al + bt) / 2;
 	} while (fabs(y1 - (tmp1[0] + tmp2[0] + tmp4[0]) / 3) > 1e-4);
 
 	return ((al + bt) / 2);
-}
-
-void set_h(double *h, double *X, int n)
-{
-	for (int i = 1; i < n; i++)
-		h[i] = X[i] - X[i - 1];
-}
-
-void set_d(double *d, double *h, double *Y, int n)
-{
-	for (int i = 1; i < n - 1; i++)
-		d[i] = ((Y[i + 1] - Y[i]) / h[i + 1]) - ((Y[i] - Y[i - 1]) / h[i]);
-}
-
-void set_C(double *C, double *h, int n)
-{
-	for (int i = 1; i < n - 1; i++) {
-		for (int j = 1; j < n - 1; j++) {
-			if (i == j) {
-				C[i * n + j] = (h[i] + h[i + 1]) / 3;
-			} else if (j == i + 1) {
-				C[i * n + j] = h[i + 1] / 6;
-			} else if (j == i - 1) {
-				C[i * n + j] = h[i] / 6;
-			} else {
-				C[i * n + j] = 0;
-			}
-		}
-	}
-}
-
-int Matrix_max_first_elem(double *a, int j, int n)
-{
-	double num = 0;
-	int num_ind = 0;
-
-	for (int z = j; z < n; z++) {
-		if (fabsf(a[z * (n + 1) + j]) > num) {
-			num = a[z * (n + 1) + j];
-			num_ind = z;
-		}
-	}
-
-	return num_ind;
-}
-
-void Matrix_swap_line(double *a, int j, int k, int n)
-{
-	double buf;
-	for (int i = 1; i < n + 1; i++) {
-		buf = a[j * (n + 1) + i];
-		a[j * (n + 1) + i] = a[k * (n + 1) + i];
-		a[k * (n + 1) + i] = buf;
-	}
-}
-
-void Matrix_answer(double *arr_arg, double *a, int n)
-{
-	for (int i = n - 1; i > 0; i--) {
-		for (int j = n - 1; j != i; j--) {
-			a[i * (n + 1) + n] = a[i * (n + 1) + n] - (a[i * (n + 1) + j] * arr_arg[j]);
-			a[i * (n + 1) + j] = 0;
-		}
-
-		arr_arg[i] = a[i * (n + 1) + n] / a[i * (n + 1) + i];
-	}
-}
-
-void set_M(double *M, double *C, double *d, int n)
-{
-	// double *arr = malloc(sizeof(double) * n * (n + 1));
-	double *arr = new double[n * (n + 1)];
-
-	for (int i = 1; i < n - 1; i++) {
-		for (int j = 1; j < n; j++) {
-			arr[i * n + j] = C[i * n + j];
-		}
-		arr[i * n + (n - 1)] = d[i];
-	}
-
-	double mult;
-
-	for (int j = 1; j < n - 2; j++) {
-
-		int num_ind = Matrix_max_first_elem(arr, j, n - 1);
-		Matrix_swap_line(arr, j, num_ind, n - 1);
-
-		for (int i = j + 1; i < (n - 1); i++) {
-			if (arr[i * (n - 1) + j] != 0) {
-				mult = -(arr[i * (n - 1) + j] / arr[j * (n - 1) + i]);
-			} else {
-				break;
-			}
-
-			for (int k = j; k < n; k++) {
-				arr[i * (n - 1) + k] += mult * arr[j * (n - 1) + k];
-			}
-		}
-	}
-
-	Matrix_answer(M, arr, (n - 1));
-	// free(arr);
-}
-
-int set_i(double *X, double x, int n)
-{
-	int i = 0;
-	for (int j = 1; j < n; j++) {
-		if (X[j - 1] <= x && x <= X[j])
-			i = j;
-	}
-
-	return i;
-}
-
-double set_s(double *X, double *Y, double x, double *h, double *M, int i)
-{
-	double s = M[i - 1] * (pow((X[i] - x), 3) / (6 * h[i]));
-	s += M[i] * (pow((x - X[i - 1]), 3) / (6 * h[i]));
-	s += (Y[i - 1] - ((M[i - 1] * pow(h[i], 2)) / 6)) * ((X[i] - x) / h[i]);
-	s += (Y[i] - ((M[i] * pow(h[i], 2)) / 6)) * ((x - X[i - 1]) / h[i]);
-
-	return s;
-}
-
-double Splines(double *X, double *Y, double x, int n)
-{
-	// double *h = malloc(sizeof(double) * n);
-	// double *d = malloc(sizeof(double) * (n - 1));
-	// double *C = malloc(sizeof(double) * n * n);
-	// double *M = malloc(sizeof(double) * n);
-
-	double *h = new double[n];
-	double *d =  new double[n - 1];
-	double *C = new double[n * n];
-	double *M = new double[n];
-
-	set_h(h, X, n);
-
-	set_d(d, h, Y, n);
-
-	set_C(C, h, n);
-
-	set_M(M, C, d, n);
-
-	int i = set_i(X, x, n);
-
-	double s = set_s(X, Y, x, h, M, i);
-
-	// free(M);
-	// free(C);
-	// free(d);
-	// free(h);
-
-	delete[] M;
-	delete[] C;
-	delete[] d;
-	delete[] h;
-
-	return s;
-}
-
-double Splines1(double x_find, double *x, double *y, int n)
-{
-	double res = 0.0;
-
-	int _i = 0;
-	for (_i = 0; x_find > x[_i] && _i < n; _i++) { }
-
-	// double *c = calloc(0.0, sizeof(double*) * n * n);
-	// double *c = malloc(sizeof(double) * n * n);
-	double *c = new double[n * n];
-
-
-	// double *h = malloc(sizeof(double) * n);
-	// set_h(h, x, n - 1);
-
-	// set_C(c, h, n); 
-
-	for (int i = 1; i < n - 1; i++) {
-		// c[i] = calloc(0.0, sizeof(double) * (n));
-		for (int j = 1; j < n - 1; j++) {
-			if (i == j) {
-				// c[i][j] = ((x[i] - x[i - 1]) + (x[i + 1] - x[i])) / 3;
-				c[i * n + j] = ((x[i] - x[i - 1]) + (x[i + 1] - x[i])) / 3;
-				continue;
-			}
-			if (j == i + 1) {
-				// c[i][j] = (x[i + 1] - x[i]) / 6;
-				c[i * n + j] = (x[i + 1] - x[i]) / 6;
-				continue;
-			}
-			if (j == i - 1) {
-				// c[i][j] = (x[i] - x[i - 1]) / 6;
-				c[i * n + j] = (x[i] - x[i - 1]) / 6;
-				continue;
-			}
-			// c[i][j] = 0;
-			c[i * n + j] = 0;
-		}
-	}
-
-	// double *d = calloc(0.0, sizeof(double) * (n));
-	// double *d = malloc(sizeof(double) * n);
-	double *d = new double[n];
-
-	for (int i = 1; i < n - 1; i++) {
-		d[i] = ((y[i + 1] - y[i]) / (x[i + 1] - x[i])) - ((y[i] - y[i - 1]) / (x[i - 1] - x[i]));
-	}
-
-	// double *M = calloc(0.0, sizeof(double) * (n));
-	// double *M = malloc(sizeof(double) * n);
-	double *M = new double[n];
-	for (int i = 0; i < n - 2; i++) {
-		double tmp = 0.0;
-		for (int j = ((i == 0) ? i : i - 1); j < ((i == n - 2) ? (i + 2) : (i + 3)); j++) {
-			// tmp += c[i][j];
-			tmp += c[i * n + j];
-		}
-		if (tmp == 0) {
-			tmp++;
-		}
-		M[i + 1] = d[i] / tmp;
-	}
-
-	// set_M(M, c, d, n);
-
-
-	res = M[_i - 1] * (pow(x[_i] - x_find, 3) / ((x[_i] - x[_i - 1]) * 6));
-	res += M[_i]  * (pow(x_find - x[_i - 1], 3) / (6 * (x[_i] - x[_i - 1])));
-	res += (y[_i - 1] - (M[_i - 1] * pow(x[_i] - x[_i - 1], 2)) / 6) * ((x[_i] - x_find) / (x[_i] - x[_i - 1]));
-	res += (y[_i] - ((M[_i] * pow(x[_i] - x[_i - 1], 2)) / 6)) * ((x_find - x[_i - 1]) / (x[_i] - x[_i - 1]));
-
-	// for (int i = 0; i < n - 1; i++)
-		// free(c[i]);
-	// free(h);
-	// free(c);
-	// free(d);
-	// free(M);
-
-	return res;
 }
 
 double Form_of_Simpson(double a, double b, double h, double *y0)
@@ -508,19 +238,16 @@ double h_i(int i, const pair<double, double> * xy)
 	return xy[i].first - xy[i-1].first;
 }
 
-/*	main diag*/
 double b_i(int i, const pair<double, double> * xy)
 {
 	return (h_i(i, xy) + h_i(i+1, xy)) / 3;
 }
 
-/*	lower & upper diag*/
 double g_i(int i, const pair<double, double> * xy)
 {
 	return h_i(i, xy) / 6;
 }
 
-/*	divided difference, d_i for vector of const term*/
 double d_i(int i, const pair<double, double> * xy)
 {
 	return ((xy[i+1].second - xy[i].second) / h_i(i+1, xy) - 
@@ -530,12 +257,10 @@ double d_i(int i, const pair<double, double> * xy)
 vector <double> thomas_come_on(vector <double>  a, vector <double> b, 
 									vector <double>  g, vector <double>  d, int n)
 {
-	/* 	c - roots, p & q - coeff */
 	vector <double> c(n);
 	vector <double> p(n);
 	vector <double> q(n);
 
-	/* 	Find coeff */
 	for(int i = 0; i < n; i++) {
 		if (i == 0) {
 			p[i] = -g[i] / b[i];
@@ -545,7 +270,7 @@ vector <double> thomas_come_on(vector <double>  a, vector <double> b,
 		p[i] = g[i] / (-b[i] - a[i] * p[i-1]);
 		q[i] = (a[i] * q[i-1] - d[i])/(-b[i] - a[i] * p[i-1]);
 	}
-	/* Find roots */
+
 	for(int i = n - 1 ; i >= 0; i--) {
 		if( i == n) {
 			c[i] = (a[i] * q[i-1] - d[i]) / (-b[i] - a[i] * p[i-1]);
@@ -583,19 +308,15 @@ int binary_search (pair<double, double> * xy, double x, int n)
 double spline_eval(int i, double * M, pair<double, double> * v, double x)
 {
 	double s1 = M[i-1] * pow(v[i].first - x, 3) / (6 * h_i(i, v));
-	//cout << s1 << "\t";
 
 	double s2 = M[i] * pow(x - v[i-1].first, 3) / (6 * h_i(i, v));
-	//cout << s2 << "\t";
 
 	double s3 = (v[i-1].second - M[i-1] * pow(h_i(i, v), 2) / 6) * 
 			(v[i].first - x) / h_i(i, v);
-	//cout << s3 << "\t";
 
 	double s4 = (v[i].second - M[i] * pow(h_i(i, v), 2) / 6) *
 			(x - v[i-1].first) / h_i(i, v);
-	//cout << s4 << "\t";
-	//cout << s1 + s2 + s3 + s4 << "\n";
+
 	return s1 + s2 + s3 + s4;
 }
 
@@ -605,13 +326,6 @@ double cubic(double x, int n, pair<double, double> * v)
 	double s = 0;
 	vector <double> M(n - 2);
 	vector <double> a(n - 2), b(n - 2), g(n - 2), d(n - 2);
-
-	/* 	Build tridiagonal system of linear equations
-		M - moments (or coeff 'c')
-		b - main diagonal
-		a - lower diagonal
-		g - upper diagonal
-		d - constant term */
 
 	a[0] = g[n-3] = 0;
 	for(int i = 1; i < n - 1; i++)
@@ -623,12 +337,8 @@ double cubic(double x, int n, pair<double, double> * v)
 	for(int i = 1; i < n - 1; i++)
 		d[i-1] = d_i(i, v);
 
-	/* Solve tridiagonal system */
 	M = thomas_come_on(a, b, g, d, n-2);
-	/* Find knots for spline */
 	i = binary_search(v, x, n);
-	//cout << i << "\n";
-	/* Calculate spline*/
 	s = spline_eval(i, M.data(), v, x);
 
 	return s;
@@ -649,7 +359,6 @@ int main()
 	double y1 = 2.0;
 
 	double D1 = dbl_count_D1(x0, x1, y0, y1, h, 1e-3);
-	// double D1 = MethodShooting(x0, x1, y0, y1, h);
 	printf("D1 = %.3lf\n", D1);
 
 	FILE *out = fopen("Runge_Kutt.txt", "w");
@@ -695,9 +404,6 @@ int main()
 	
 
 	for (double i = a; i <= b; i += h_) {
-		// double tmp = Splines(x, y, i, 6);
-		// double tmp = Splines1(i, x, y, 6);
-		// double tmp = P(i, x, y, 6);
 		double tmp = cubic(i, v.size(), v.data());
 		fprintf(splines_out, "%lf %lf\n", i, tmp);
 	}
