@@ -180,7 +180,6 @@ double MethodShooting(double x0, double x1, double y0, double y1, double h)
 double Form_of_Simpson(double a, double b, double h, double *y0)
 {
 	double res = 0.0;
-	h = 0.08;
 	double j = a;
 
 	double *tmp;
@@ -214,7 +213,7 @@ double double_counting(double (*method)(double, double, double, double *), doubl
 
 		count++;
 	}
-	printf("h = %lf\n", h);
+	// printf("h = %lf\n", h);
 	printf("Count iteration = %d\n", count);
 
 	return cur;
@@ -413,8 +412,8 @@ int main()
 	fclose(splines_out);
 
 	Eps = 1e-2;
-	printf("Integration = %.10lf\n", Form_of_Simpson(a, b, h, tmp));
-	// printf("Integration = %.10lf\n", double_counting(Form_of_Simpson, a, b, h_, Eps, tmp));
+	// printf("Integration = %.10lf\n", Form_of_Simpson(a, b, h, tmp));
+	printf("Integration = %.10lf\n", double_counting(Form_of_Simpson, a, b, h_, Eps, tmp));
 
 	return 0;
 }
