@@ -214,7 +214,7 @@ double double_counting(double (*method)(double, double, double, double *), doubl
 		count++;
 	}
 	// printf("h = %lf\n", h);
-	printf("Count iteration = %d\n", count);
+	// printf("Count iteration = %d\n", count);
 
 	return cur;
 }
